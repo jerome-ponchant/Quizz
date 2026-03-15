@@ -17,7 +17,7 @@ export class QuizzComponent implements OnInit {
   floriscopeUrl?: string='';
   userAnswer: string = '';
   isLoading: boolean = false;
-
+  apiUrl = environment.apiUrl;
   // Statistiques
   totalCorrect: number = 0;
   currentStreak: number = 0;
