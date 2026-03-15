@@ -1,0 +1,129 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+      <h1 class="text-center mb-4 text-success">
+        <i class="bi bi-tree"></i> Herbier Numérique
+      </h1>
+
+      <div *ngIf="isLoading" class="text-center my-5">
+        <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Recherche d'une plante...</span>
+        </div>
+        <p class="mt-2 text-muted italic">Exploration de la base botanique...</p>
+      </div>
+
+      <div *ngIf="!isLoading && currentPlant" class="card shadow-lg border-0">
+
+        <div class="container py-4">
+          <div class="row mb-4 text-center">
+            <div class="col-4">
+              <div class="card bg-light border-0">
+                <small class="text-muted">Total</small>
+                <div class="h4 text-success">{{ totalCorrect }}</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="card bg-light border-0" [class.animate__pulse]="currentStreak > 0">
+                <small class="text-muted">Série</small>
+                <div class="h4 text-primary">{{ currentStreak }} 🔥</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="card bg-warning border-0 text-white shadow-sm">
+                <small>Best</small>
+                <div class="h4">{{ bestStreak }} 🏆</div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="currentPlant" class="card shadow-lg" [class.success-anim]="feedback?.status === 'success'"
+            [class.error-anim]="feedback?.status === 'error'" [class.record-anim]="feedback?.status === 'record'">
+
+            <div class="ratio ratio-16x9 position-relative">
+              <img [src]="currentPlant.imageUrl" class="card-img-top img-cover">
+              <div *ngIf="isNewRecord" class="position-absolute top-50 start-50 translate-middle">
+                <h2 class="display-1 text-warning animate__animated animate__zoomIn">🏆</h2>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div *ngIf="failedPlants.size > 0" class="text-center mt-2">
+                <span class="badge rounded-pill bg-info text-dark">
+                  {{ failedPlants.size }} plante(s) en cours d'apprentissage
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <p class="text-muted  mb-3 fw-bolder">Identifiez cette espèce si vous pouvez ! 😁</p>
+
+
+          <div class="input-group input-group-lg mb-3">
+            <input type="text" [(ngModel)]="userAnswer" (keyup.enter)="checkAnswer()"
+              [disabled]="feedback?.status ==='success' " class="form-control" placeholder="Nom de la plante..."
+              aria-label="Réponse">
+            <button class="btn btn-success" type="button" (click)="checkAnswer()"
+              [disabled]="feedback?.status ==='success' || !userAnswer">
+              Vérifier
+            </button>
+          </div>
+          <div class="text-center mt-2">
+            <button class="btn btn-sm btn-outline-danger border-0" (click)="giveUp()" *ngIf="!feedback">
+              <i class="fw-bold bi bi-question-circle "> Je suis vraiment trop nul... </i>😞
+            </button>
+          </div>
+
+          <!--div *ngIf="feedback" [ngClass]="feedback.status ==='success'  ? 'alert-success' : 'alert-danger'"
+            class="alert d-flex align-items-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi me-2"
+              [ngClass]="feedback.status ==='success'  ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+            <div class="flex-grow-1">
+              {{ feedback.message }}
+            </div>
+            <div class="ms-auto" style="flex-shrink: 0;">
+              <a [href]="floriscopeUrl"><img src="assets/images/floriscope.svg"/></a>
+            </div>
+          </div -->
+
+          <div *ngIf="feedback"
+     [ngClass]="feedback.status === 'success' ? 'alert-success' : 'alert-danger'"
+     class="alert animate__animated animate__fadeIn"
+     role="alert">
+
+  <div class="row align-items-center">
+    <div class="col-auto">
+      <i class="bi"
+         [ngClass]="feedback.status === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"
+         style="font-size: 1.2rem;"></i>
+    </div>
+
+    <div class="col">
+      {{ feedback.message }}
+    </div>
+
+    <div class="col-auto">
+      <a [href]="floriscopeUrl" target="_blank">
+        <img src="assets/images/floriscope.svg"
+             alt="Floriscope"
+             style="height: 30px; width: auto; display: block;">
+      </a>
+    </div>
+  </div>
+</div>
+
+          <div class="d-flex justify-content-between mt-3">
+            <span class="badge bg-light text-dark pt-2">ID: #{{ currentPlant.id }}</span>
+          </div>
+          <button class="btn btn-sm btn-link text-muted" (click)="resetStats()">
+            Réinitialiser mes stats
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

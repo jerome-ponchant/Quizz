@@ -1,0 +1,29 @@
+/* Animation de succès : léger bond */
+.success-anim {
+  animation: bounceIn 0.8s;
+  border: 4px solid #198754;
+}
+
+/* Animation de record : arc-en-ciel et vibration */
+.record-anim {
+  animation: heartBeat 1s infinite, rainbowText 2s infinite;
+  border: 5px double #ffc107;
+}
+
+/* Animation d'échec : secousse */
+.error-anim {
+  animation: shakeX 0.5s;
+  border: 4px solid #dc3545;
+}
+
+.img-cover {
+  object-fit: cover;
+  background-color: #f8f9fa;
+}
+
+@keyframes rainbowText {
+  0% { color: #ff0000; }
+  33% { color: #00ff00; }
+  66% { color: #0000ff; }
+  100% { color: #ff0000; }
+}
