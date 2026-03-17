@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, afterNextRender } from '@angular/core';
 import { PlantService } from '../services/plant.service';
 import { Plant } from '../models/plant';
 import { FormsModule } from '@angular/forms';
@@ -29,10 +29,13 @@ export class QuizzComponent implements OnInit {
 
   feedback: { message: string, status: 'success' | 'error' | 'record' } | null = null;
 
-  constructor(private quizzService: PlantService) { }
+  constructor(private quizzService: PlantService) {
+    afterNextRender(()=> {
+      this.loadFromStorage();
+    });
+   }
 
   ngOnInit(): void {
-    this.loadFromStorage();
     this.loadNextPlant();
   }
 
