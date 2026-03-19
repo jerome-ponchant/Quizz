@@ -42,6 +42,8 @@
 
             <div class="ratio ratio-16x9 position-relative">
               <img [src]="currentPlant.imageUrl" class="card-img-top img-cover">
+              <img *ngIf="feedback?.status==='record'" src="assets/images/record/1.gif" class="card-img-top img-cover" style="z-index: 10;">
+              <img *ngIf="feedback?.status==='success'" src="assets/images/success/1.gif" class="card-img-top img-cover" style="z-index: 10;">
               <div *ngIf="isNewRecord" class="position-absolute top-50 start-50 translate-middle">
                 <h2 class="display-1 text-warning animate__animated animate__zoomIn">🏆</h2>
               </div>
