@@ -76,7 +76,7 @@ export class QuizzComponent implements OnInit {
 
     if (!this.currentPlant) return;
 
-    const isCorrect = this.userAnswer.trim().toLowerCase() === this.currentPlant.name.toLowerCase();
+    const isCorrect = this.userAnswer.replaceAll("'","").trim().toLowerCase() === this.currentPlant.name.replaceAll("'","").trim().toLowerCase();
 
     if (isCorrect) {
       // Succès : On la supprime de la liste des échecs si elle y était
