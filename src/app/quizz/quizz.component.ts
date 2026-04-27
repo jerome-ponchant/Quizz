@@ -5,10 +5,9 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../environments/environment';
 
-
 enum AnswerType {
-  QCM = "QCM",
-  TEXT = "TEXT"
+  QCM = 'QCM',
+  TEXT = 'TEXT',
 }
 
 @Component({
@@ -52,28 +51,22 @@ export class QuizzComponent implements OnInit {
     this.loadNextPlant();
   }
 
-   loadNextPlant(): void {
+  loadNextPlant(): void {
     this.isLoading = true;
     this.feedback = null;
     this.userAnswer = '';
     this.isNewRecord = false;
-    this.selectedType=AnswerType.TEXT;
+    this.selectedType = AnswerType.TEXT;
     this.quizzOptions = []; // Reset des options
-    const failedIds : number[] = Array.from(this.failedPlants.keys());
-    this.quizzService.getNewQuestion(failedIds).subscribe(
-      (q)=>{
-        this.currentPlant=q.target;
-        this.floriscopeUrl =
+    const failedIds: number[] = Array.from(this.failedPlants.keys());
+    this.quizzService.getNewQuestion(failedIds).subscribe((q) => {
+      this.currentPlant = q.target;
+      this.floriscopeUrl =
         environment.floriscopeUrl + this.currentPlant.name.replaceAll(' ', '+');
-        this.quizzOptions=q.options;
-        this.isLoading = false;
-      });
+      this.quizzOptions = q.options;
+      this.isLoading = false;
+    });
   }
-
-
-
-
-
 
   checkAnswer(optionSelected?: Plant): void {
     if (!this.currentPlant || this.feedback?.status === 'success') return;
@@ -88,13 +81,20 @@ export class QuizzComponent implements OnInit {
     } else {
       // Mode Saisie manuelle
       isCorrect =
-        this.userAnswer.replaceAll(/['‘’]/g, ' ').replaceAll(/\s+/g, ' ').toLowerCase() ===
-        this.currentPlant.name.replaceAll(/['’‘]/g, ' ').replaceAll(/\s+/g, ' ').trim().toLowerCase();
+        this.userAnswer
+          .replaceAll(/['=‘’]/g, ' ')
+          .replaceAll(/\s+/g, ' ')
+          .toLowerCase() ===
+        this.currentPlant.name
+          .replaceAll(/['=’‘]/g, ' ')
+          .replaceAll(/\s+/g, ' ')
+          .trim()
+          .toLowerCase();
+      this.failedPlants.delete(this.currentPlant.id);
       pointsEarned = 10;
     }
 
     if (isCorrect) {
-      this.failedPlants.delete(this.currentPlant.id);
       this.totalCorrect++;
       this.currentStreak++;
       this.score += pointsEarned; // Ajout des points
