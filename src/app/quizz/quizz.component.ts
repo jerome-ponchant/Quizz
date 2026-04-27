@@ -5,16 +5,25 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../environments/environment';
 
+
+enum AnswerType {
+  QCM = "QCM",
+  TEXT = "TEXT"
+}
+
 @Component({
   selector: 'app-quizz',
   standalone: true,
   imports: [FormsModule, CommonModule],
   templateUrl: './quizz.component.html',
-  styleUrl: './quizz.component.css'
+  styleUrl: './quizz.component.css',
 })
 export class QuizzComponent implements OnInit {
+  public answerTypes = AnswerType;
+  selectedType = AnswerType.TEXT;
+  fetchedPlants: Plant[] = [];
   currentPlant?: Plant;
-  floriscopeUrl?: string='';
+  floriscopeUrl?: string = '';
   userAnswer: string = '';
   isLoading: boolean = false;
   apiUrl = environment.apiUrl;
@@ -27,13 +36,17 @@ export class QuizzComponent implements OnInit {
   // Gestion des plantes difficiles (ID -> nombre d'échecs)
   failedPlants: Map<number, Plant> = new Map();
 
-  feedback: { message: string, status: 'success' | 'error' | 'record' } | null = null;
+  feedback: { message: string; status: 'success' | 'error' | 'record' } | null =
+    null;
+
+  score: number = 0; // Nouveau : Système de points
+  quizzOptions: Plant[] = []; // Nouveau : Les 6 choix du QCM
 
   constructor(private quizzService: PlantService) {
-    afterNextRender(()=> {
+    afterNextRender(() => {
       this.loadFromStorage();
     });
-   }
+  }
 
   ngOnInit(): void {
     this.loadNextPlant();
@@ -44,26 +57,76 @@ export class QuizzComponent implements OnInit {
     this.feedback = null;
     this.userAnswer = '';
     this.isNewRecord = false;
+    this.selectedType=AnswerType.TEXT;
+    this.quizzOptions = []; // Reset des options
 
     // Logique de sélection : 80% de chance de rejouer une plante ratée si la liste n'est pas vide
     if (this.failedPlants.size > 0 && Math.random() < 0.8) {
       const entries = Array.from(this.failedPlants.values());
       this.currentPlant = entries[Math.floor(Math.random() * entries.length)];
-      this.floriscopeUrl=environment.floriscopeUrl+this.currentPlant?.name.replaceAll(" ","+");
-      this.isLoading = false;
+      this.floriscopeUrl =
+        environment.floriscopeUrl +
+        this.currentPlant?.name.replaceAll(' ', '+');
     } else {
       this.fetchRandomPlant();
+    }
+    this.finishLoadingPlant();
+  }
+
+  private finishLoadingPlant() {
+    if (this.currentPlant) {
+      this.floriscopeUrl =
+        environment.floriscopeUrl + this.currentPlant.name.replaceAll(' ', '+');
+      this.generateQuizOptions();
+      this.isLoading = false;
     }
   }
 
   private fetchRandomPlant() {
-    this.quizzService.getRandomPlant().subscribe({
-      next: (plant: Plant | undefined) => {
-        this.currentPlant = plant;
-        this.floriscopeUrl=environment.floriscopeUrl+this.currentPlant?.name.replaceAll(" ","+");
-        this.isLoading = false;
-      }
+      this.isLoading=true;
+      this.quizzService.getRandomPlant().subscribe({
+        next: (plant: Plant | undefined) => {
+          if(plant != undefined){
+            this.currentPlant= plant;
+          }
+          this.isLoading = false;
+        },
+      });
+    }
+
+
+  // Génère les 6 options du QCM
+  private generateQuizOptions() {
+    if (!this.currentPlant) return;
+    this.quizzOptions=[];
+    let options = new Set<Plant>();
+    options.add(this.currentPlant);
+
+    // 1. On pioche dans les plantes ratées (failedPlants)
+    const failedList = Array.from(this.failedPlants.values()).filter(
+      (p) => p.id !== this.currentPlant?.id
+    );
+    failedList.forEach((p) => {
+      if (options.size < 6) options.add(p);
     });
+
+    // 2. Si on n'a pas encore 6 options, on demande au service des plantes aléatoires
+    // Note: Pour un code propre, il faudrait une méthode getMultipleRandomPlants() dans votre service.
+    // Ici, on va simuler en attendant que l'utilisateur choisisse,
+    // mais idéalement complétez via le service.
+
+    if(options.size<6){
+    this.isLoading=true;
+    this.quizzService.findRandomPlant(6).subscribe(
+      (plants: Plant[])=>{
+        plants.forEach(
+          (p)=>{ if (options.size<6 && !options.has(p))options.add(p)}
+        )
+        this.quizzOptions = Array.from(options).sort(() => Math.random() - 0.5);
+        this.isLoading=false;
+    })
+    }
+
   }
 
   // Simulation d'une méthode pour récupérer une plante précise
@@ -72,34 +135,56 @@ export class QuizzComponent implements OnInit {
     this.fetchRandomPlant(); // fallback pour l'exemple
   }
 
-  checkAnswer(): void {
+  checkAnswer(optionSelected?: Plant): void {
+    if (!this.currentPlant || this.feedback?.status === 'success') return;
 
-    if (!this.currentPlant) return;
+    let isCorrect = false;
+    let pointsEarned = 0;
 
-    const isCorrect = this.userAnswer.replaceAll(/['‘’]/g," ").trim().toLowerCase() === this.currentPlant.name.replaceAll(/['’‘]/g," ").trim().toLowerCase();
+    if (optionSelected) {
+      // Mode QCM
+      isCorrect = optionSelected.id === this.currentPlant.id;
+      pointsEarned = 1;
+    } else {
+      // Mode Saisie manuelle
+      isCorrect =
+        this.userAnswer.replaceAll(/['‘’]/g, ' ').trim().toLowerCase() ===
+        this.currentPlant.name.replaceAll(/['’‘]/g, ' ').trim().toLowerCase();
+      pointsEarned = 10;
+    }
 
     if (isCorrect) {
-      // Succès : On la supprime de la liste des échecs si elle y était
       this.failedPlants.delete(this.currentPlant.id);
-
       this.totalCorrect++;
       this.currentStreak++;
-      this.feedback = { message: `C'était bien  ${this.currentPlant.name}`, status: 'success' };
-      if(this.currentStreak>this.bestStreak){
+      this.score += pointsEarned; // Ajout des points
+
+      this.feedback = {
+        message: `Bravo ! +${pointsEarned}pt(s). C'était bien ${this.currentPlant.name}`,
+        status: 'success',
+      };
+
+      if (this.currentStreak > this.bestStreak) {
         this.bestStreak = this.currentStreak;
-        this.feedback.status='record';
+        this.feedback.status = 'record';
       }
-      // ... reste de la logique de score ...
-
     } else {
-      // Échec : On ajoute l'objet complet à notre Map
       this.failedPlants.set(this.currentPlant.id, this.currentPlant);
-
       this.currentStreak = 0;
-      this.feedback = { message: `C'était : ${this.currentPlant.name}`, status: 'error' };
+      this.feedback = {
+        message: `Hélas... C'était : ${this.currentPlant.name}`,
+        status: 'error',
+      };
     }
     setTimeout(() => this.loadNextPlant(), 5000);
     this.saveToStorage();
+  }
+
+  public selectType(type: AnswerType): void {
+    // Logique "sans retour en arrière" : on ne change que si c'est la première fois
+    if (this.selectedType == AnswerType.TEXT) {
+      this.selectedType = type;
+    }
   }
 
   private saveToStorage(): void {
@@ -109,7 +194,8 @@ export class QuizzComponent implements OnInit {
     const dataToSave = {
       totalCorrect: this.totalCorrect,
       bestStreak: this.bestStreak,
-      failedPlants: failedPlantsArray
+      score: this.score,
+      failedPlants: failedPlantsArray,
     };
 
     localStorage.setItem('botanica_game_data', JSON.stringify(dataToSave));
@@ -121,13 +207,13 @@ export class QuizzComponent implements OnInit {
       const parsed = JSON.parse(savedData);
       this.totalCorrect = parsed.totalCorrect || 0;
       this.bestStreak = parsed.bestStreak || 0;
+      this.score = parsed.score || 0;
 
       // On reconstruit la Map à partir du tableau sauvegardé
       if (parsed.failedPlants) {
         this.failedPlants = new Map(parsed.failedPlants);
       }
     }
-
   }
 
   giveUp(): void {
@@ -143,21 +229,21 @@ export class QuizzComponent implements OnInit {
     // 3. On affiche la réponse avec un statut spécifique
     this.feedback = {
       message: `C'était : ${this.currentPlant.name}. Elle est ajoutée à vos révisions.`,
-      status: 'error'
+      status: 'error',
     };
 
     // 4. On laisse l'utilisateur voir la réponse avant de passer à la suite
     // On ne le force pas à cliquer, on attend 3 secondes
     setTimeout(() => this.loadNextPlant(), 3500);
-
   }
 
   resetStats(): void {
-    if (confirm("Voulez-vous vraiment effacer vos records et révisions ?")) {
+    if (confirm('Voulez-vous vraiment effacer vos records et révisions ?')) {
       localStorage.removeItem('botanica_game_data');
       this.totalCorrect = 0;
       this.bestStreak = 0;
       this.currentStreak = 0;
+      this.score = 0;
       this.failedPlants.clear();
     }
   }

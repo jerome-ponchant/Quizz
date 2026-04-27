@@ -1,3 +1,14 @@
+/* Animation des boutons QCM */
+.btn-outline-success {
+  transition: all 0.2s ease-in-out;
+  border-width: 2px;
+  background-color: white;
+}
+
+.btn-outline-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
 /* Animation de succès : léger bond */
 .success-anim {
   animation: bounceIn 0.8s;
@@ -26,4 +37,58 @@
   33% { color: #00ff00; }
   66% { color: #0000ff; }
   100% { color: #ff0000; }
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.9); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+/* Badge de score animé */
+.score-badge {
+  font-size: 1.1rem;
+  transition: transform 0.3s;
+}
+
+.score-up {
+  animation: pulse-green 0.5s;
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); color: #28a745; }
+  100% { transform: scale(1); }
+}
+
+.radio-group {
+  display: flex;       /* Aligne les éléments en ligne */
+  gap: 20px;          /* Espace fixe entre les deux blocs */
+  justify-content: center; /* Centre le groupe horizontalement */
+  align-items: center;     /* Aligne verticalement l'input et le texte */
+  margin: 15px 0;
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 1px solid #ccc; /* Un petit cadre pour faire "bouton" */
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.radio-item:hover {
+  background-color: #f0f0f0;
+}
+
+.radio-item input {
+  margin-right: 8px; /* Espace entre le rond et le texte */
 }

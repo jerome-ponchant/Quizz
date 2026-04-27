@@ -60,10 +60,40 @@
         </div>
 
         <div class="card-body p-4">
-          <p class="text-muted  mb-3 fw-bolder">Identifiez cette espèce si vous pouvez ! 😁</p>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <p class="text-muted mb-0 fw-bolder">Identifiez cette espèce si vous pouvez ! 😁</p>
+            <span class="badge bg-primary">Score: {{ score }} pts</span>
+          </div>
 
+          <div class="answer-selector">
+            <h3>Choisissez votre mode de réponse :</h3>
+            <div class="radio-group">
+            <label class="radio-item">
+              <input type="radio"
+                     name="mode"
+                     [checked]="selectedType === answerTypes.TEXT"
+                     [value]="answerTypes.TEXT"
+                     [disabled]="selectedType === answerTypes.QCM"
+                     (change)="selectType(answerTypes.TEXT)">
+              Saisie libre (10 pts)
+            </label>
 
-          <div class="input-group input-group-lg mb-3">
+            <label class="radio-item">
+              <input type="radio"
+                     name="mode"
+                     [checked]="selectedType === answerTypes.QCM"
+                     [value]="answerTypes.QCM"
+                     [disabled]="selectedType === answerTypes.QCM"
+                     (change)="selectType(answerTypes.QCM)">
+              QCM (1 pt)
+            </label>
+            </div>
+          </div>
+
+          <hr>
+
+          <div [ngSwitch]="selectedType">
+          <div class="input-group input-group-lg mb-3" *ngSwitchCase="answerTypes.TEXT">
             <input type="text" [(ngModel)]="userAnswer" (keyup.enter)="checkAnswer()"
               [disabled]="feedback?.status ==='success' " class="form-control" placeholder="Nom de la plante..."
               aria-label="Réponse">
@@ -72,12 +102,28 @@
               Vérifier
             </button>
           </div>
+
+          <div *ngSwitchCase="answerTypes.QCM">
+            <div class="row g-2 mb-4" *ngIf="!feedback && quizzOptions.length > 0">
+              <div class="col-6" *ngFor="let option of quizzOptions">
+                <button
+                  class="btn btn-outline-success w-100 py-2 shadow-sm fw-bold transition-all"
+                  (click)="checkAnswer(option)"
+                  [disabled]="isLoading">
+                  {{ option.name }}
+                </button>
+              </div>
+            </div>
+            <p class="warning"><em>Mode QCM activé : choix définitif pour cette plante.</em></p>
+          </div>
+
           <div class="text-center mt-2">
             <button class="btn btn-sm btn-outline-danger border-0" (click)="giveUp()" *ngIf="!feedback">
               <i class="fw-bold bi bi-question-circle "> Je suis vraiment trop nul... </i>😞
             </button>
           </div>
 
+        </div>
           <!--div *ngIf="feedback" [ngClass]="feedback.status ==='success'  ? 'alert-success' : 'alert-danger'"
             class="alert d-flex align-items-center animate__animated animate__fadeIn" role="alert">
             <i class="bi me-2"

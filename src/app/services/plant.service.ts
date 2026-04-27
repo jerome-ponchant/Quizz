@@ -29,4 +29,9 @@ export class PlantService {
     );
   }
 
+  findRandomPlant(n : number): Observable<Plant[]> {
+    return this.http.get<Plant[]>(`${this.BASE_URL}/randomPlant/${n}`);
+  }
+
+
 }
