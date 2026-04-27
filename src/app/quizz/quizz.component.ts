@@ -52,88 +52,28 @@ export class QuizzComponent implements OnInit {
     this.loadNextPlant();
   }
 
-  loadNextPlant(): void {
+   loadNextPlant(): void {
     this.isLoading = true;
     this.feedback = null;
     this.userAnswer = '';
     this.isNewRecord = false;
     this.selectedType=AnswerType.TEXT;
     this.quizzOptions = []; // Reset des options
-
-    // Logique de sélection : 80% de chance de rejouer une plante ratée si la liste n'est pas vide
-    if (this.failedPlants.size > 0 && Math.random() < 0.8) {
-      const entries = Array.from(this.failedPlants.values());
-      this.currentPlant = entries[Math.floor(Math.random() * entries.length)];
-      this.floriscopeUrl =
-        environment.floriscopeUrl +
-        this.currentPlant?.name.replaceAll(' ', '+');
-    } else {
-      this.fetchRandomPlant();
-    }
-    this.finishLoadingPlant();
-  }
-
-  private finishLoadingPlant() {
-    if (this.currentPlant) {
-      this.floriscopeUrl =
+    const failedIds : number[] = Array.from(this.failedPlants.keys());
+    this.quizzService.getNewQuestion(failedIds).subscribe(
+      (q)=>{
+        this.currentPlant=q.target;
+        this.floriscopeUrl =
         environment.floriscopeUrl + this.currentPlant.name.replaceAll(' ', '+');
-      this.generateQuizOptions();
-      this.isLoading = false;
-    }
-  }
-
-  private fetchRandomPlant() {
-      this.isLoading=true;
-      this.quizzService.getRandomPlant().subscribe({
-        next: (plant: Plant | undefined) => {
-          if(plant != undefined){
-            this.currentPlant= plant;
-          }
-          this.isLoading = false;
-        },
+        this.quizzOptions=q.options;
+        this.isLoading = false;
       });
-    }
-
-
-  // Génère les 6 options du QCM
-  private generateQuizOptions() {
-    if (!this.currentPlant) return;
-    this.quizzOptions=[];
-    let options = new Set<Plant>();
-    options.add(this.currentPlant);
-
-    // 1. On pioche dans les plantes ratées (failedPlants)
-    const failedList = Array.from(this.failedPlants.values()).filter(
-      (p) => p.id !== this.currentPlant?.id
-    );
-    failedList.forEach((p) => {
-      if (options.size < 6) options.add(p);
-    });
-
-    // 2. Si on n'a pas encore 6 options, on demande au service des plantes aléatoires
-    // Note: Pour un code propre, il faudrait une méthode getMultipleRandomPlants() dans votre service.
-    // Ici, on va simuler en attendant que l'utilisateur choisisse,
-    // mais idéalement complétez via le service.
-
-    if(options.size<6){
-    this.isLoading=true;
-    this.quizzService.findRandomPlant(6).subscribe(
-      (plants: Plant[])=>{
-        plants.forEach(
-          (p)=>{ if (options.size<6 && !options.has(p))options.add(p)}
-        )
-        this.quizzOptions = Array.from(options).sort(() => Math.random() - 0.5);
-        this.isLoading=false;
-    })
-    }
-
   }
 
-  // Simulation d'une méthode pour récupérer une plante précise
-  private fetchSpecificPlant(id: number) {
-    // ... appel service ...
-    this.fetchRandomPlant(); // fallback pour l'exemple
-  }
+
+
+
+
 
   checkAnswer(optionSelected?: Plant): void {
     if (!this.currentPlant || this.feedback?.status === 'success') return;
@@ -141,15 +81,15 @@ export class QuizzComponent implements OnInit {
     let isCorrect = false;
     let pointsEarned = 0;
 
-    if (optionSelected) {
+    if (this.selectedType == AnswerType.QCM) {
       // Mode QCM
-      isCorrect = optionSelected.id === this.currentPlant.id;
+      isCorrect = optionSelected?.id === this.currentPlant.id;
       pointsEarned = 1;
     } else {
       // Mode Saisie manuelle
       isCorrect =
-        this.userAnswer.replaceAll(/['‘’]/g, ' ').trim().toLowerCase() ===
-        this.currentPlant.name.replaceAll(/['’‘]/g, ' ').trim().toLowerCase();
+        this.userAnswer.replaceAll(/['‘’]/g, ' ').replaceAll(/\s+/g, ' ').toLowerCase() ===
+        this.currentPlant.name.replaceAll(/['’‘]/g, ' ').replaceAll(/\s+/g, ' ').trim().toLowerCase();
       pointsEarned = 10;
     }
 
