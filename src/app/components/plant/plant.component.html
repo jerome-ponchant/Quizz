@@ -1,0 +1,67 @@
+<div class="container py-5">
+  <h1 class="text-success mb-4"><i class="bi bi-tree-fill"></i> Inventaire des Plantes</h1>
+
+  <!-- Formulaire -->
+  <div class="card shadow border-0 mb-5">
+    <div class="card-body p-4">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="fw-bold">Nom de la plante</label>
+          <input type="text" [(ngModel)]="plantForm.name" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="fw-bold">URL de l'image</label>
+          <input type="text" [(ngModel)]="plantForm.imageUrl" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="fw-bold">Catégories (Ctrl+clic pour plusieurs)</label>
+          <select multiple [(ngModel)]="plantForm.categories" class="form-select" style="height: 100px;">
+            <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+        <div class="col-12 text-end">
+          <button class="btn btn-success btn-lg btn-outline-success" (click)="savePlant()">
+            {{ isEditing ? "Mettre à jour l'espèce" : "Ajouter à l'herbier" }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grille des plantes -->
+  <div class="row g-4">
+    <div class="col-md-4 col-lg-3" *ngFor="let plant of plants">
+      <div class="card h-100 shadow-sm border-2 btn-outline-success success-anim">
+        <!-- Image de la plante -->
+        <div class="ratio ratio-4x3">
+          <img [src]="plant.imageUrl" class="card-img-top img-cover" [alt]="plant.name">
+        </div>
+
+        <div class="card-body">
+          <h5 class="card-title fw-bold text-dark">{{ plant.name }}</h5>
+
+          <!-- Affichage des catégories associées -->
+          <div class="mb-3">
+            <span *ngFor="let cat of plant.categories" class="badge bg-light text-success border me-1">
+              {{ cat.name }}
+            </span>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex justify-content-between border-top pt-3">
+            <button class="btn btn-sm btn-outline-primary border-0" (click)="editPlant(plant)">
+              <i class="bi bi-pencil-square"></i> Modifier
+            </button>
+            <button class="btn btn-sm btn-outline-danger border-0" (click)="deletePlant(plant.id!)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-footer bg-white border-0">
+          <small class="text-muted italic">ID: #{{ plant.id }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

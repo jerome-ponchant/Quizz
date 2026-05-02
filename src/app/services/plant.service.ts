@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment'; // Import dynamique
@@ -10,7 +10,7 @@ import { QuizzQuestion } from '../models/quizzQuestion';
   providedIn: 'root'
 })
 export class PlantService {
-  private readonly BASE_URL = `${environment.apiUrl}/quizz`;
+  private apiUrl = environment.apiUrl+'/plants'
 
   constructor(private http: HttpClient) {}
 
@@ -18,7 +18,7 @@ export class PlantService {
    * HttpClient s'occupe de mapper le JSON vers l'interface Plant automatiquement
    */
   async getRandomPlant(): Promise<Plant> {
-    const obs$ = this.http.get<Plant>(`${this.BASE_URL}/randomPlant`).pipe(
+    const obs$ = this.http.get<Plant>(`${this.apiUrl}/randomPlant`).pipe(
       map(plant => {
         // Si l'URL de l'image ne commence pas déjà par "http"
         if (plant.imageUrl && !plant.imageUrl.startsWith('http')) {
@@ -32,14 +32,14 @@ export class PlantService {
   }
 
   findRandomPlant(n : number): Observable<Plant[]> {
-    return this.http.get<Plant[]>(`${this.BASE_URL}/randomPlant/${n}`);
+    return this.http.get<Plant[]>(`${this.apiUrl}/randomPlant/${n}`);
   }
 
   getNewQuestion(failedIds: number[]): Observable<QuizzQuestion> {
     const body = { failedIds: failedIds };
 
     // Symfony attend du JSON, Angular l'envoie par défaut avec HttpClient.post
-    return this.http.post<QuizzQuestion>(`${this.BASE_URL}/build-options`, body).pipe(
+    return this.http.post<QuizzQuestion>(`${this.apiUrl}/build-options`, body).pipe(
       map(question => {
         // Si l'URL de l'image ne commence pas déjà par "http"
         if (question.target.imageUrl && !question.target.imageUrl.startsWith('http')) {
@@ -50,6 +50,22 @@ export class PlantService {
       })
     );;
   }
+  findAll(): Observable<Plant[]> {
+    const headers = new HttpHeaders({
+      'Accept': 'application/json'
+    });
+    return this.http.get<Plant[]>(`${this.apiUrl}`,{headers: headers}); }
 
+  create(plant: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/`, plant, { headers: { 'Content-Type': 'application/json' }});
+  }
+
+  update(id: number, plant: any): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}`, plant, {
+      headers: { 'Content-Type': 'application/merge-patch+json' }
+    });
+  }
+
+  delete(id: number): Observable<void> { return this.http.delete<void>(`${this.apiUrl}/${id}`); }
 
 }

@@ -1,0 +1,45 @@
+/* Inspiré du style QCM[cite: 2] */
+.btn-outline-success {
+  transition: all 0.2s ease-in-out;
+  border-width: 2px;
+  background-color: white;
+  color: #198754;
+}
+
+.btn-outline-success:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  background-color: #f8fffb;
+  color: #198754;
+}
+
+.form-control, .form-select {
+  border: 2px solid #e9ecef;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  border-color: #198754;
+  box-shadow: none;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+/* Animation d'entrée pour les nouvelles cartes de catégorie */
+.category-card-animate {
+  animation: bounceIn 0.5s ease-out;
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  70% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* On réutilise l'effet de survol existant[cite: 7] */
+.card.btn-outline-success:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
