@@ -26,6 +26,8 @@ export class QuizzComponent implements OnInit {
   userAnswer: string = '';
   isLoading: boolean = false;
   apiUrl = environment.apiUrl;
+  uploadPrefix? :string;
+
   // Statistiques
   totalCorrect: number = 0;
   currentStreak: number = 0;
@@ -40,6 +42,7 @@ export class QuizzComponent implements OnInit {
 
   score: number = 0; // Nouveau : Système de points
   quizzOptions: Plant[] = []; // Nouveau : Les 6 choix du QCM
+
 
   constructor(private quizzService: PlantService) {
     afterNextRender(() => {

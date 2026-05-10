@@ -1,3 +1,4 @@
+<pre>Debug Prefix: {{ (uploadPrefix$ | async) | json }}</pre>
 <div class="container py-5">
   <h1 class="text-success mb-4"><i class="bi bi-tree-fill"></i> Inventaire des Plantes</h1>
 
@@ -12,6 +13,37 @@
         <div class="col-md-4">
           <label class="fw-bold">URL de l'image</label>
           <input type="text" [(ngModel)]="plantForm.imageUrl" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="fw-bold text-success mb-2">
+            <i class="bi bi-camera-fill"></i> Image de la plante
+          </label>
+
+          <!-- Champ d'upload -->
+          <div class="input-group mb-2">
+            <input type="file"
+                   class="form-control"
+                   (change)="onFileSelected($event)"
+                   accept="image/*">
+          </div>
+
+          <!-- Indicateur de chargement -->
+          <div *ngIf="uploading" class="text-center py-2">
+            <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+            <span class="ms-2 small">Téléchargement...</span>
+          </div>
+
+          <!-- Aperçu de l'image -->
+          <div class="mt-2 border rounded p-1 bg-light text-center" style="height: 150px;">
+            <img *ngIf="plantForm.imageUrl"
+                [src]="(uploadPrefix$ | async) + plantForm.imageUrl"
+                alt="Aperu"
+                 class="img-fluid h-100 shadow-sm rounded"
+                 style="object-fit: cover;">
+            <div *ngIf="!plantForm.imageUrl" class="d-flex align-items-center h-100 justify-content-center text-muted">
+              <small>Aucune image sélectionnée</small>
+            </div>
+          </div>
         </div>
         <div class="col-md-4">
           <label class="fw-bold">Catégories (Ctrl+clic pour plusieurs)</label>
@@ -34,7 +66,7 @@
       <div class="card h-100 shadow-sm border-2 btn-outline-success success-anim">
         <!-- Image de la plante -->
         <div class="ratio ratio-4x3">
-          <img [src]="plant.imageUrl" class="card-img-top img-cover" [alt]="plant.name">
+          <img [src]="(uploadPrefix$ | async)+plant.imageUrl" class="card-img-top img-cover" [alt]="plant.name">
         </div>
 
         <div class="card-body">

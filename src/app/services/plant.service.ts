@@ -1,29 +1,36 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, firstValueFrom } from 'rxjs';
+import { Observable, firstValueFrom, forkJoin } from 'rxjs';
 import { environment } from '../../environments/environment'; // Import dynamique
 import { Plant } from '../models/plant'; // Import de l'interface
 import { map } from 'rxjs/operators';
 import { QuizzQuestion } from '../models/quizzQuestion';
+import { UploadService } from './upload.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PlantService {
-  private apiUrl = environment.apiUrl+'/plants'
+  private apiUrl = environment.apiUrl;
+  private plantUrl = this.apiUrl + "/plants";
+  private quizzUrl = this.apiUrl+"/quizz";
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private uploadService: UploadService) {}
 
   /**
    * HttpClient s'occupe de mapper le JSON vers l'interface Plant automatiquement
    */
   async getRandomPlant(): Promise<Plant> {
-    const obs$ = this.http.get<Plant>(`${this.apiUrl}/randomPlant`).pipe(
-      map(plant => {
-        // Si l'URL de l'image ne commence pas déjà par "http"
+    // On combine la récupération de la plante et du préfixe
+    const obs$ = forkJoin({
+      plant: this.http.get<Plant>(`${this.quizzUrl}/randomPlant`),
+      prefix: this.uploadService.getUploadPrefix()
+    }).pipe(
+      map(({ plant, prefix }) => {
         if (plant.imageUrl && !plant.imageUrl.startsWith('http')) {
-          // On concatène l'URL de base du serveur PHP
-          plant.imageUrl = `${environment.apiUrl}/${plant.imageUrl}`;
+          // Utilisation du préfixe dynamique (ex: http://localhost:8000/uploads/plants/)
+          plant.imageUrl = `${prefix}${plant.imageUrl}`;
         }
         return plant;
       })
@@ -32,40 +39,54 @@ export class PlantService {
   }
 
   findRandomPlant(n : number): Observable<Plant[]> {
-    return this.http.get<Plant[]>(`${this.apiUrl}/randomPlant/${n}`);
+    return this.http.get<Plant[]>(`${this.quizzUrl}/randomPlant/${n}`);
   }
 
   getNewQuestion(failedIds: number[]): Observable<QuizzQuestion> {
     const body = { failedIds: failedIds };
 
     // Symfony attend du JSON, Angular l'envoie par défaut avec HttpClient.post
-    return this.http.post<QuizzQuestion>(`${this.apiUrl}/build-options`, body).pipe(
-      map(question => {
-        // Si l'URL de l'image ne commence pas déjà par "http"
-        if (question.target.imageUrl && !question.target.imageUrl.startsWith('http')) {
-          // On concatène l'URL de base du serveur PHP
-          question.target.imageUrl = `${environment.apiUrl}/${question.target.imageUrl}`;
-        }
-        return question;
+    return this.http.post(`${this.quizzUrl}/build-options`, body, {
+      responseType: 'text' // On demande du texte pour éviter l'erreur de parsing
+    }).pipe(
+      map(res => {
+        console.log('Réponse brute du serveur :', res);
+        return JSON.parse(res); // On tente le parse manuellement pour voir où ça bloque
       })
-    );;
+    );
   }
   findAll(): Observable<Plant[]> {
     const headers = new HttpHeaders({
       'Accept': 'application/json'
     });
-    return this.http.get<Plant[]>(`${this.apiUrl}`,{headers: headers}); }
+    return this.http.get<Plant[]>(`${this.plantUrl}`,{headers: headers}); }
 
   create(plant: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/`, plant, { headers: { 'Content-Type': 'application/json' }});
+    return this.http.post(`${this.plantUrl}`, plant, { headers: { 'Content-Type': 'application/json' }});
   }
 
   update(id: number, plant: any): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}`, plant, {
+    return this.http.patch(`${this.plantUrl}/${id}`, plant, {
       headers: { 'Content-Type': 'application/merge-patch+json' }
     });
   }
 
-  delete(id: number): Observable<void> { return this.http.delete<void>(`${this.apiUrl}/${id}`); }
+  delete(id: number): Observable<void> { return this.http.delete<void>(`${this.plantUrl}/${id}`); }
+
+
+/**
+   * On délègue l'upload au service spécialisé.
+   * Le composant n'appelle que cette méthode.
+   */
+uploadPlantImage(file: File, plantName: string): Observable<{ path: string }> {
+  // Si tu veux ajouter une logique de dossier spécifique, c'est ici :
+  const relativePath = `plants/${plantName}`;
+  return this.uploadService.uploadPlantImage(file, relativePath);
+}
+
+// Cette méthode est utile pour le composant pour afficher l'image uploadée
+getPrefix(): Observable<string> {
+  return this.uploadService.getUploadPrefix();
+}
 
 }
