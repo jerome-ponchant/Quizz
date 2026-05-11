@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PlantService } from '../../services/plant.service';
 import { CategoryService } from '../../services/category.service';
+import { Category } from '../../models/category';
 
 @Component({
   selector: 'app-plant',
@@ -13,6 +14,9 @@ import { CategoryService } from '../../services/category.service';
 })
 export class PlantComponent implements OnInit {
   plants: any[] = [];
+  currentPage = 1;
+  totalItems = 0;
+  itemsPerPage = 10;
   categories: any[] = [];
   isEditing = false;
   uploadPrefix$ = this.plantService.getPrefix();
@@ -30,25 +34,42 @@ export class PlantComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
+    this.loadCategories(); // Charge les catégories
   }
 
-  loadData() {
-    this.plantService.findAll().subscribe({
-      next: (data: any) => {
-        // Si API Platform (JSON-LD) est activé, on cherche 'hydra:member'
-        // Sinon, on prend directement data si c'est du JSON brut
-        if (data['hydra:member']) {
-          this.plants = data['hydra:member']; // C'est ici que se trouve l'Iterable (Array)
-        } else {
-          this.plants = data; // Cas où vous seriez en JSON pur
-        }
+
+
+  // plant.component.ts
+  loadData(page: number = 1) {
+    this.currentPage = page;
+    this.plantService.findAll(page).subscribe({
+      next: (result) => {
+        // Le service renvoie déjà un objet propre
+        this.plants = result.plants;
+        this.totalItems = result.total;
       },
-      error: (err) => console.error('Erreur de chargement des plantes', err),
+      error: (err) => {
+        console.error('Erreur', err);
+        this.plants = [];
+      }
     });
-    this.categoryService
-      .findAll()
-      .subscribe((data) => (this.categories = data['hydra:member'] || data));
   }
+
+  // Calcul du nombre de pages
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.itemsPerPage);
+  }
+
+// category.component.ts
+loadCategories() {
+  this.categoryService.findAll().subscribe({
+    next: (data: Category[]) => {
+      // 'data' est déjà le tableau extrait par le service
+      this.categories = data;
+    },
+    error: (err) => console.error('Erreur lors du chargement', err)
+  });
+}
 
   savePlant() {
     // Transformation des IDs de catégories en IRIs pour API Platform

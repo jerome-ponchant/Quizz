@@ -26,7 +26,7 @@ export class QuizzComponent implements OnInit {
   userAnswer: string = '';
   isLoading: boolean = false;
   apiUrl = environment.apiUrl;
-  uploadPrefix? :string;
+  uploadPrefix$ = this.quizzService.getPrefix();
 
   // Statistiques
   totalCorrect: number = 0;

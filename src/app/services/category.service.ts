@@ -1,14 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Category } from '../models/category';
 
-export interface HydraCollection<T> {
-  'hydra:member': T[];
-  'hydra:totalItems'?: number;
-  // vous pouvez ajouter 'hydra:view', etc.
-}
 
 @Injectable({
   providedIn: 'root'
@@ -19,8 +14,13 @@ export class CategoryService {
   constructor(private http: HttpClient) {}
 
   /** Récupère la liste des catégories[cite: 6] */
-  findAll(): Observable<HydraCollection<Category>> {
-    return this.http.get<HydraCollection<Category>>(this.apiUrl);
+  findAll(): Observable<Category[]> {
+    return this.http.get<any>(this.apiUrl).pipe(
+      map(data => {
+        // On extrait le tableau de la réponse API Platform
+        return data['member'] || data['hydra:member'] || (Array.isArray(data) ? data : [] || []);
+      })
+    );
   }
 
   /** Crée une nouvelle catégorie[cite: 6] */

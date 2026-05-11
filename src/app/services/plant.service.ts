@@ -6,6 +6,7 @@ import { Plant } from '../models/plant'; // Import de l'interface
 import { map } from 'rxjs/operators';
 import { QuizzQuestion } from '../models/quizzQuestion';
 import { UploadService } from './upload.service';
+import { HydraCollection } from '../models/api-response';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +15,7 @@ export class PlantService {
   private apiUrl = environment.apiUrl;
   private plantUrl = this.apiUrl + "/plants";
   private quizzUrl = this.apiUrl+"/quizz";
+  private uploadUrl$ = this.uploadService.getUploadPrefix();
 
   constructor(private http: HttpClient,
     private uploadService: UploadService) {}
@@ -25,7 +27,7 @@ export class PlantService {
     // On combine la récupération de la plante et du préfixe
     const obs$ = forkJoin({
       plant: this.http.get<Plant>(`${this.quizzUrl}/randomPlant`),
-      prefix: this.uploadService.getUploadPrefix()
+      prefix: this.uploadUrl$
     }).pipe(
       map(({ plant, prefix }) => {
         if (plant.imageUrl && !plant.imageUrl.startsWith('http')) {
@@ -55,11 +57,19 @@ export class PlantService {
       })
     );
   }
-  findAll(): Observable<Plant[]> {
-    const headers = new HttpHeaders({
-      'Accept': 'application/json'
-    });
-    return this.http.get<Plant[]>(`${this.plantUrl}`,{headers: headers}); }
+  findAll(page: number = 1): Observable<{ plants: Plant[], total: number }> {
+    const headers = new HttpHeaders({ 'Accept': 'application/ld+json' });
+
+    return this.http.get<HydraCollection<Plant>>(`${this.plantUrl}?page=${page}`, { headers }).pipe(
+      map(data => {
+        return {
+          // On gère les deux variantes de clés ici, une fois pour toutes
+          plants: data['member'] || data['hydra:member'] || [],
+          total: data['totalItems'] || data['hydra:totalItems'] || 0
+        };
+      })
+    );
+  }
 
   create(plant: any): Observable<any> {
     return this.http.post(`${this.plantUrl}`, plant, { headers: { 'Content-Type': 'application/json' }});

@@ -30,15 +30,16 @@ export class CategoryComponent implements OnInit {
     this.loadCategories();
   }
 
-  loadCategories() {
-    this.categoryService.findAll().subscribe({
-      next: (data) => {
-        // TypeScript reconnaît maintenant 'hydra:member' grâce à l'interface
-        this.categories = data['hydra:member'];
-      },
-      error: (err) => console.error('Erreur lors du chargement', err)
-    });
-  }
+// category.component.ts
+loadCategories() {
+  this.categoryService.findAll().subscribe({
+    next: (data: Category[]) => {
+      // 'data' est déjà le tableau extrait par le service
+      this.categories = data;
+    },
+    error: (err) => console.error('Erreur lors du chargement', err)
+  });
+}
 
   saveCategory() {
     if (!this.categoryForm.name) return;

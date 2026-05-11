@@ -1,4 +1,3 @@
-<pre>Debug Prefix: {{ (uploadPrefix$ | async) | json }}</pre>
 <div class="container py-5">
   <h1 class="text-success mb-4"><i class="bi bi-tree-fill"></i> Inventaire des Plantes</h1>
 
@@ -21,10 +20,7 @@
 
           <!-- Champ d'upload -->
           <div class="input-group mb-2">
-            <input type="file"
-                   class="form-control"
-                   (change)="onFileSelected($event)"
-                   accept="image/*">
+            <input type="file" class="form-control" (change)="onFileSelected($event)" accept="image/*">
           </div>
 
           <!-- Indicateur de chargement -->
@@ -35,11 +31,8 @@
 
           <!-- Aperçu de l'image -->
           <div class="mt-2 border rounded p-1 bg-light text-center" style="height: 150px;">
-            <img *ngIf="plantForm.imageUrl"
-                [src]="(uploadPrefix$ | async) + plantForm.imageUrl"
-                alt="Aperu"
-                 class="img-fluid h-100 shadow-sm rounded"
-                 style="object-fit: cover;">
+            <img *ngIf="plantForm.imageUrl" [src]="(uploadPrefix$ | async) + plantForm.imageUrl" alt="Aperu"
+              class="img-fluid h-100 shadow-sm rounded" style="object-fit: cover;">
             <div *ngIf="!plantForm.imageUrl" class="d-flex align-items-center h-100 justify-content-center text-muted">
               <small>Aucune image sélectionnée</small>
             </div>
@@ -66,7 +59,9 @@
       <div class="card h-100 shadow-sm border-2 btn-outline-success success-anim">
         <!-- Image de la plante -->
         <div class="ratio ratio-4x3">
-          <img [src]="(uploadPrefix$ | async)+plant.imageUrl" class="card-img-top img-cover" [alt]="plant.name">
+          <img *ngIf="plantForm.imageUrl" [src]="(uploadPrefix$ | async) + plantForm.imageUrl" alt="Aperçu">
+
+          <img [src]="(uploadPrefix$ | async) + plant.imageUrl" class="card-img-top img-cover" [alt]="plant.name">
         </div>
 
         <div class="card-body">
@@ -96,4 +91,27 @@
       </div>
     </div>
   </div>
+
+  <div class="d-flex justify-content-between align-items-center mt-4">
+    <div class="text-muted">
+      Affichage de {{ plants.length }} sur {{ totalItems }} plantes
+    </div>
+
+    <nav aria-label="Pagination">
+      <ul class="pagination mb-0">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <button class="page-link" (click)="loadData(currentPage - 1)">Précédent</button>
+        </li>
+
+        <li class="page-item active">
+          <span class="page-link">Page {{ currentPage }} sur {{ totalPages }}</span>
+        </li>
+
+        <li class="page-item" [class.disabled]="currentPage >= totalPages">
+          <button class="page-link" (click)="loadData(currentPage + 1)">Suivant</button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
 </div>
