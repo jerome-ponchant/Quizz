@@ -1,0 +1,12 @@
+<div class="category-item">
+  <span (click)="toggle()" class="category-name">
+    {{ category.name }}
+    <small *ngIf="category.no?.length">({{ category.no.length }})</small>
+  </span>
+
+  <ul *ngIf="isExpanded && category.no?.length" class="children">
+    <li *ngFor="let child of category.no">
+      <app-category-tree-item [category]="child"></app-category-tree-item>
+    </li>
+  </ul>
+</div>

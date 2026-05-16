@@ -4,6 +4,9 @@ import { Plant } from '../models/plant';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../environments/environment';
+import { CategoryListComponent } from '../components/gui/category-list/category-list.component';
+import { CategoryService } from '../services/category.service';
+import { Category } from '../models/category';
 
 enum AnswerType {
   QCM = 'QCM',
@@ -13,7 +16,7 @@ enum AnswerType {
 @Component({
   selector: 'app-quizz',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, CategoryListComponent],
   templateUrl: './quizz.component.html',
   styleUrl: './quizz.component.css',
 })
@@ -27,6 +30,10 @@ export class QuizzComponent implements OnInit {
   isLoading: boolean = false;
   apiUrl = environment.apiUrl;
   uploadPrefix$ = this.quizzService.getPrefix();
+
+  // Données de filtrage par catégories
+  categories: Category[] = [];
+  selectedCategoryIds = new Set<number>();
 
   // Statistiques
   totalCorrect: number = 0;
@@ -43,14 +50,28 @@ export class QuizzComponent implements OnInit {
   score: number = 0; // Nouveau : Système de points
   quizzOptions: Plant[] = []; // Nouveau : Les 6 choix du QCM
 
-
-  constructor(private quizzService: PlantService) {
+  constructor(private quizzService: PlantService, private categoryService: CategoryService) {
     afterNextRender(() => {
       this.loadFromStorage();
     });
   }
 
   ngOnInit(): void {
+    this.loadNextPlant();
+  }
+
+  // Charge le catalogue pour alimenter le sélecteur d'arborescence
+  loadFilterCategories() {
+    this.categoryService.findAll().subscribe({
+      next: (data) => this.categories = data,
+      error: (err) => console.error('Erreur chargement filtres', err)
+    });
+  }
+
+  // Déclenché dès qu'on coche/décoche des catégories dans le dropdown
+  onCategoryFilterChange(ids: number[]) {
+    this.selectedCategoryIds = new Set(ids);
+    // On relance immédiatement une nouvelle question adaptée aux nouveaux filtres !
     this.loadNextPlant();
   }
 
@@ -61,8 +82,11 @@ export class QuizzComponent implements OnInit {
     this.isNewRecord = false;
     this.selectedType = AnswerType.TEXT;
     this.quizzOptions = []; // Reset des options
+
     const failedIds: number[] = Array.from(this.failedPlants.keys());
-    this.quizzService.getNewQuestion(failedIds).subscribe((q) => {
+    const categoryIds: number[] = Array.from(this.selectedCategoryIds);
+
+    this.quizzService.getNewQuestion(failedIds, categoryIds).subscribe((q) => {
       this.currentPlant = q.target;
       this.floriscopeUrl =
         environment.floriscopeUrl + this.currentPlant.name.replaceAll(' ', '+');

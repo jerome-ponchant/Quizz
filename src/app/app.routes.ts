@@ -6,6 +6,6 @@ import { PlantComponent } from './components/plant/plant.component';
 export const routes: Routes = [
   { path: 'quizz', component: QuizzComponent }, // L'URL sera /quizz
   { path: '', redirectTo: '/quizz', pathMatch: 'full' }, // Redirection par défaut (optionnel)
-  { path: 'quizz/category', component: CategoryComponent },
-  { path: 'quizz/plant', component: PlantComponent }
+  { path: 'category', component: CategoryComponent },
+  { path: 'plant', component: PlantComponent }
 ];

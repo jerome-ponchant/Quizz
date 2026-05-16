@@ -44,8 +44,8 @@ export class PlantService {
     return this.http.get<Plant[]>(`${this.quizzUrl}/randomPlant/${n}`);
   }
 
-  getNewQuestion(failedIds: number[]): Observable<QuizzQuestion> {
-    const body = { failedIds: failedIds };
+  getNewQuestion(failedIds: number[], categoryIds: number[] = []): Observable<QuizzQuestion> {
+    const body = { failedIds: failedIds, categoryIds: categoryIds };
 
     // Symfony attend du JSON, Angular l'envoie par défaut avec HttpClient.post
     return this.http.post(`${this.quizzUrl}/build-options`, body, {

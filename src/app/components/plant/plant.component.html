@@ -38,11 +38,21 @@
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="row">
+        <div class="col-md-12">
           <label class="fw-bold">Catégories (Ctrl+clic pour plusieurs)</label>
-          <select multiple [(ngModel)]="plantForm.categories" class="form-select" style="height: 100px;">
-            <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
-          </select>
+          <div class="col-md-12">
+            <label class="fw-bold mb-2">Catégories de la plante</label>
+            <div class="border rounded p-3 bg-light" >
+              <app-category-list
+                [allCategories]="categories"
+                [selectedIds]="selectedCategoryIds"
+                [isDropdownMode]="true"
+                (selectionChange)="onCategorySelectionChange($event)">
+              </app-category-list>
+            </div>
+          </div>
+        </div>
         </div>
         <div class="col-12 text-end">
           <button class="btn btn-success btn-lg btn-outline-success" (click)="savePlant()">

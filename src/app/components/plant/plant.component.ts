@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { PlantService } from '../../services/plant.service';
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category';
+import { CategoryListComponent } from '../gui/category-list/category-list.component';
 
 @Component({
   selector: 'app-plant',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,CategoryListComponent],
   templateUrl: './plant.component.html',
   styleUrls: ['./plant.component.css'],
 })
@@ -23,6 +24,7 @@ export class PlantComponent implements OnInit {
 
   // Formulaire avec gestion multi-catégories
   plantForm: any = { id: null, name: '', imageUrl: '', categories: [] };
+  selectedCategoryIds = new Set<number>();
 
   selectedFile: File | null = null;
   uploading = false;
@@ -100,6 +102,7 @@ loadCategories() {
       typeof c === 'string' ? +c.split('/').pop()! : c.id
     );
     this.plantForm = { ...plant, categories: categoryIds };
+    this.selectedCategoryIds = new Set<number>(categoryIds);
   }
 
   deletePlant(id: number) {
@@ -108,6 +111,11 @@ loadCategories() {
         this.plants = this.plants.filter((p) => p.id !== id);
       });
     }
+  }
+
+  onCategorySelectionChange(ids: number[]) {
+    this.selectedCategoryIds = new Set<number>(ids);
+    this.plantForm.categories = ids; // Met à jour le tableau pour le payload du savePlant
   }
 
   private completeAction() {

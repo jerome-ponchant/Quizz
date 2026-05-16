@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Category } from '../models/category';
@@ -35,6 +35,9 @@ export class CategoryService {
 
   /** Met à jour une catégorie existante */
   update(id: number, category: Category): Observable<Category> {
-    return this.http.patch<Category>(`${this.apiUrl}/${id}`, category);
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/merge-patch+json'
+    });
+    return this.http.patch<Category>(`${this.apiUrl}/${id}`, category,{headers});
   }
 }
