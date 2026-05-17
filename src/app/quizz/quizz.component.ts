@@ -57,6 +57,7 @@ export class QuizzComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadFilterCategories();
     this.loadNextPlant();
   }
 
