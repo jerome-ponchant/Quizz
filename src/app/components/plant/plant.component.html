@@ -2,18 +2,29 @@
   <h1 class="text-success mb-4"><i class="bi bi-tree-fill"></i> Inventaire des Plantes</h1>
 
   <!-- Formulaire -->
-  <div class="card shadow border-0 mb-5">
+  <div #formTop class="card shadow border-0 mb-5">
     <div class="card-body p-4">
       <div class="row g-3">
-        <div class="col-md-4">
-          <label class="fw-bold">Nom de la plante</label>
-          <input type="text" [(ngModel)]="plantForm.name" class="form-control">
+        <div class="col-md-3">
+          <label class="fw-bold">Nom international</label>
+          <input type="text" [(ngModel)]="plantForm.name" class="form-control"><br><br><br>
+          <a [href]="floriscopeUrl" target="_blank">
+            <img src="assets/images/floriscope.svg" alt="Floriscope" style="height: 30px; width: auto; display: block;">
+          </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+          <label class="fw-bold">Nom vernaculaire</label>
+          <input type="text" [(ngModel)]="plantForm.commonName" class="form-control"
+            placeholder="ex: Rosier de France"><br><br><br>
+          <a [href]="wikipediaUrl" target="_blank">
+            <img src="assets/images/wikipedia.svg" alt="wikipedia" style="height: 30px; width: auto; display: block;">
+          </a>
+        </div>
+        <div class="col-md-3">
           <label class="fw-bold">URL de l'image</label>
           <input type="text" [(ngModel)]="plantForm.imageUrl" class="form-control">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label class="fw-bold text-success mb-2">
             <i class="bi bi-camera-fill"></i> Image de la plante
           </label>
@@ -31,7 +42,7 @@
 
           <!-- Aperçu de l'image -->
           <div class="mt-2 border rounded p-1 bg-light text-center" style="height: 150px;">
-            <img *ngIf="plantForm.imageUrl" [src]="(uploadPrefix$ | async) + plantForm.imageUrl" alt="Aperu"
+            <img *ngIf="plantForm.imageUrl" [src]="(uploadPrefix$ | async) + plantForm.imageUrl+cacheBuster" alt="Aperu"
               class="img-fluid h-100 shadow-sm rounded" style="object-fit: cover;">
             <div *ngIf="!plantForm.imageUrl" class="d-flex align-items-center h-100 justify-content-center text-muted">
               <small>Aucune image sélectionnée</small>
@@ -39,89 +50,119 @@
           </div>
         </div>
         <div class="row">
-        <div class="col-md-12">
-          <label class="fw-bold">Catégories (Ctrl+clic pour plusieurs)</label>
-          <div class="col-md-12">
+
+          <div class="col-md-8">
             <label class="fw-bold mb-2">Catégories de la plante</label>
-            <div class="border rounded p-3 bg-light" >
-              <app-category-list
-                [allCategories]="categories"
-                [selectedIds]="selectedCategoryIds"
-                [isDropdownMode]="true"
-                (selectionChange)="onCategorySelectionChange($event)">
+            <div class="border rounded p-3 bg-light">
+              <app-category-list [allCategories]="categories" [selectedIds]="selectedCategoryIds"
+                [isDropdownMode]="true" (selectionChange)="onCategorySelectionChange($event)">
               </app-category-list>
             </div>
+
+          </div>
+
+          <div class="col-4 text-end d-flex justify-content-end gap-2">
+            <button [class]="isEditing ? 'btn btn-primary btn-lg fw-bold' : 'btn btn-success btn-lg fw-bold'"
+              (click)="savePlant()">
+              <i [class]="isEditing ? 'bi bi-check-circle-fill' : 'bi bi-plus-circle-fill'"></i>
+              {{ isEditing ? "Mettre à jour l'espèce" : "Ajouter à l'herbier" }}
+            </button>
+            <button *ngIf="isEditing" class="btn btn-outline-secondary btn-lg fw-bold" (click)="cancelEdition()"
+              title="Créer une nouvelle fiche de plante">
+              <i class="bi bi-arrow-counterclockwise"></i> Nouvelle plante
+            </button>
           </div>
         </div>
-        </div>
-        <div class="col-12 text-end">
-          <button class="btn btn-success btn-lg btn-outline-success" (click)="savePlant()">
-            {{ isEditing ? "Mettre à jour l'espèce" : "Ajouter à l'herbier" }}
+      </div>
+    </div>
+    <div class="border-2 border-primary rounded row mb-4">
+      <div class="col-md-5 col-lg-4">
+        <div class="input-group shadow-sm">
+          <span class="input-group-text bg-white border-end-0 text-muted">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()" class="form-control border-start-0 ps-0"
+            placeholder="Rechercher partout par nom...">
+          <button *ngIf="searchTerm" class="btn btn-outline-secondary border-start-0"
+            (click)="searchTerm = ''; onSearch()">
+            <i class="bi bi-x-lg"></i>
           </button>
         </div>
       </div>
+      <div class="col-md-5">
+        <label class="fw-bold text-muted small mb-1">Filtrer par catégorie</label>
+        <div class="shadow-sm border rounded bg-white px-2" style="padding-top: 4px; padding-bottom: 4px;">
+          <app-category-list [allCategories]="categories" [selectedIds]="filterCategoryIdsSet" [isDropdownMode]="true"
+            (selectionChange)="onFilterCategoryChange($event)">
+          </app-category-list>
+        </div>
+      </div>
+      <div class="col-md-2" *ngIf="searchTerm || selectedFilterCategoryIds">
+        <button class="btn btn-outline-danger w-100" (click)="clearFilters()">
+          <i class="bi bi-trash"></i> Effacer
+        </button>
+      </div>
     </div>
-  </div>
-
-  <!-- Grille des plantes -->
-  <div class="row g-4">
-    <div class="col-md-4 col-lg-3" *ngFor="let plant of plants">
-      <div class="card h-100 shadow-sm border-2 btn-outline-success success-anim">
-        <!-- Image de la plante -->
-        <div class="ratio ratio-4x3">
-          <img *ngIf="plantForm.imageUrl" [src]="(uploadPrefix$ | async) + plantForm.imageUrl" alt="Aperçu">
-
-          <img [src]="(uploadPrefix$ | async) + plant.imageUrl" class="card-img-top img-cover" [alt]="plant.name">
-        </div>
-
-        <div class="card-body">
-          <h5 class="card-title fw-bold text-dark">{{ plant.name }}</h5>
-
-          <!-- Affichage des catégories associées -->
-          <div class="mb-3">
-            <span *ngFor="let cat of plant.categories" class="badge bg-light text-success border me-1">
-              {{ cat.name }}
-            </span>
+    <!-- Grille des plantes -->
+    <div class="row g-4">
+      <div class="col-md-4 col-lg-3" *ngFor="let plant of plants">
+        <div class="card h-100 shadow-sm border-2 btn-outline-success success-anim">
+          <!-- Image de la plante -->
+          <div class="ratio ratio-4x3">
+            <img [src]="(uploadPrefix$ | async) + plant.imageUrl+cacheBuster" class="card-img-top img-cover"
+              [alt]="plant.name">
           </div>
 
-          <!-- Actions -->
-          <div class="d-flex justify-content-between border-top pt-3">
-            <button class="btn btn-sm btn-outline-primary border-0" (click)="editPlant(plant)">
-              <i class="bi bi-pencil-square"></i> Modifier
-            </button>
-            <button class="btn btn-sm btn-outline-danger border-0" (click)="deletePlant(plant.id!)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>
-        </div>
+          <div class="card-body">
+            <h5 class="card-title fw-bold text-dark">{{ plant.name }}</h5>
+            <p *ngIf="plant.commonName" class="text-muted small italic mb-2">
+              {{ plant.commonName }}
+            </p>
+            <!-- Affichage des catégories associées -->
+            <div class="mb-3">
+              <span *ngFor="let cat of plant.categories" class="badge bg-light text-success border me-1">
+                {{ cat.name }}
+              </span>
+            </div>
 
-        <div class="card-footer bg-white border-0">
-          <small class="text-muted italic">ID: #{{ plant.id }}</small>
+            <!-- Actions -->
+            <div class="d-flex justify-content-between border-top pt-3">
+              <button class="btn btn-sm btn-outline-primary border-0" (click)="editPlant(plant)">
+                <i class="bi bi-pencil-square"></i> Modifier
+              </button>
+              <button class="btn btn-sm btn-outline-danger border-0" (click)="deletePlant(plant.id!)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="card-footer bg-white border-0">
+            <small class="text-muted italic">ID: #{{ plant.id }}</small>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="d-flex justify-content-between align-items-center mt-4">
-    <div class="text-muted">
-      Affichage de {{ plants.length }} sur {{ totalItems }} plantes
+    <div class="d-flex justify-content-between align-items-center mt-4">
+      <div class="text-muted">
+        Affichage de {{ plants.length }} sur {{ totalItems }} plantes
+      </div>
+
+      <nav aria-label="Pagination">
+        <ul class="pagination mb-0">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button class="page-link" (click)="loadData(currentPage - 1)">Précédent</button>
+          </li>
+
+          <li class="page-item active">
+            <span class="page-link">Page {{ currentPage }} sur {{ totalPages }}</span>
+          </li>
+
+          <li class="page-item" [class.disabled]="currentPage >= totalPages">
+            <button class="page-link" (click)="loadData(currentPage + 1)">Suivant</button>
+          </li>
+        </ul>
+      </nav>
     </div>
 
-    <nav aria-label="Pagination">
-      <ul class="pagination mb-0">
-        <li class="page-item" [class.disabled]="currentPage === 1">
-          <button class="page-link" (click)="loadData(currentPage - 1)">Précédent</button>
-        </li>
-
-        <li class="page-item active">
-          <span class="page-link">Page {{ currentPage }} sur {{ totalPages }}</span>
-        </li>
-
-        <li class="page-item" [class.disabled]="currentPage >= totalPages">
-          <button class="page-link" (click)="loadData(currentPage + 1)">Suivant</button>
-        </li>
-      </ul>
-    </nav>
   </div>
-
-</div>

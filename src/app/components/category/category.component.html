@@ -12,17 +12,30 @@
           <h5 class="fw-bold mb-3">{{ isEditing ? 'Modifier la catégorie' : 'Nouvelle Catégorie' }}</h5>
           <div class="row g-3">
             <div class="col-md-5">
-              <input type="text" [(ngModel)]="categoryForm.name" class="form-control form-control-lg" placeholder="Nom de la catégorie...">
+              <input type="text" [(ngModel)]="categoryForm.name" class="form-control form-control-lg"
+                placeholder="Nom de la catégorie...">
             </div>
             <div class="col-md-5">
-              <select [(ngModel)]="categoryForm.parentId" class="form-select form-select-lg">
-                <option [value]="null">Aucun parent (Racine)</option>
-                <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
-              </select>
+              <label>Catégorie parente</label>
+              <app-category-list [allCategories]="categories" [selectedIds]="parentCategoryIds"  [isDropdownMode]="true" [singleSelection]="true"
+              (selectionChange)="onParentCategorySelect($event)">
+            </app-category-list>
             </div>
-            <div class="col-md-2">
-              <button class="btn btn-success btn-lg w-100 btn-outline-success fw-bold" (click)="saveCategory()">
-                {{ isEditing ? 'Mettre à jour' : 'Ajouter' }}
+
+
+            <div class="col-md-3 d-flex gap-2">
+              <button *ngIf="isEditing" class="btn btn-outline-secondary btn-lg" (click)="cancelEdition()"
+                title="Créer une nouvelle catégorie">
+                <i class="bi bi-plus-circle"></i> Nouvelle
+              </button>
+
+              <button class="btn btn-success btn-lg flex-grow-1 fw-bold" (click)="saveCategory()">
+                {{ isEditing ? 'Modifier' : 'Ajouter' }}
+              </button>
+
+              <button *ngIf="isEditing && categoryForm.id" class="btn btn-danger btn-lg"
+                (click)="deleteCategory(categoryForm.id)">
+                <i class="bi bi-trash">Supprimer</i>
               </button>
             </div>
           </div>
@@ -32,14 +45,13 @@
       <!-- Liste des catégories -->
       <div class="card shadow-sm border-0 mt-4">
         <div class="card-header bg-white py-3">
-          <h5 class="fw-bold mb-0 text-success"><i class="bi bi-diagram-3"></i> Structure hiérarchique des catégories</h5>
+          <h5 class="fw-bold mb-0 text-success"><i class="bi bi-diagram-3"></i> Structure hiérarchique des catégories
+          </h5>
         </div>
         <div class="card-body bg-light" style="max-height: 500px; overflow-y: auto;">
 
-          <app-category-list
-            [allCategories]="categories"
-            [selectedIds]="selectedCategoryIds"
-            (selectionChange)="onAdminCategorySelect($event)">
+          <app-category-list [allCategories]="categories" [selectedIds]="selectedCategoryIds" [singleSelection]="true"
+            (selectionChange)="onAdminCategorySelect($event)" [isDropdownMode]="false">
           </app-category-list>
 
         </div>

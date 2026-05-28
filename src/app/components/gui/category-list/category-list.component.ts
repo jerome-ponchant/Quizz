@@ -15,6 +15,8 @@ export class CategoryListComponent {
 // On stocke les IDs sélectionnés dans un Set pour éviter de modifier le modèle
   @Input() selectedIds = new Set<number>();
   @Input() isDropdownMode: boolean = false; // Mode d'affichage demandé
+  @Input() singleSelection: boolean = false;
+
   @Output() selectionChange = new EventEmitter<number[]>();
 
 // Set local pour mémoriser les IDs des catégories dépliées
@@ -51,12 +53,32 @@ export class CategoryListComponent {
   toggleSelection(id: number | undefined, event: any) {
     if (id === undefined) return;
 
-    if (event.target.checked) {
-      this.selectedIds.add(id);
+    // 1. On vérifie si l'élément était DÉJÀ sélectionné avant le clic
+    const wasAlreadySelected = this.selectedIds.has(id);
+
+    if (this.singleSelection) {
+      // En mode sélection unique :
+      if (wasAlreadySelected) {
+        // Si on clique sur l'élément déjà coché, on vide tout (désélection)
+        this.selectedIds.clear();
+        // On force l'élément HTML (radio) à se décocher visuellement
+        event.target.checked = false;
+      } else {
+        // Sinon, on vide l'ancienne sélection et on ajoute la nouvelle
+        this.selectedIds.clear();
+        this.selectedIds.add(id);
+      }
     } else {
-      this.selectedIds.delete(id);
+      // Mode multi-sélection (comportement d'origine inchangé)
+      const isChecked = event.target.checked;
+      if (isChecked) {
+        this.selectedIds.add(id);
+      } else {
+        this.selectedIds.delete(id);
+      }
     }
 
+    // On émet le tableau (vide si désélectionné, ou avec le nouvel ID)
     this.selectionChange.emit(Array.from(this.selectedIds));
   }
 
@@ -99,6 +121,11 @@ hasChildren(cat: Category): boolean {
 
 // Pour que les composants enfants notifient aussi le parent racine
 onChildSelectionChange(ids: number[]) {
+  // CORRECTION : On reconstruit le Set avec les nouvelles valeurs reçues de l'enfant
+  // pour forcer la détection de changement Angular sur l'instance courante
+  this.selectedIds = new Set<number>(ids);
+
+  // On remonte l'info au composant parent supérieur
   this.selectionChange.emit(ids);
 }
 }

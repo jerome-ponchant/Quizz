@@ -1,47 +1,37 @@
 <div *ngIf="isDropdownMode && parentId === null" class="custom-dropdown-container">
-
   <div class="form-select custom-dropdown-input d-flex justify-content-between align-items-center"
-       (click)="toggleDropdown()">
+    (click)="toggleDropdown()">
     <span [class.text-muted]="selectedIds.size === 0">{{ selectedLabels }}</span>
   </div>
 
   <div *ngIf="isOpen" class="custom-dropdown-overlay shadow-lg border rounded p-3 bg-white">
-    <app-category-list
-      [allCategories]="allCategories"
-      [parentId]="null"
-      [selectedIds]="selectedIds"
-      [isDropdownMode]="false"
-      (selectionChange)="selectionChange.emit($event)">
+    <app-category-list [allCategories]="allCategories" [parentId]="null" [selectedIds]="selectedIds"
+      [isDropdownMode]="false" [singleSelection]="singleSelection" (selectionChange)="onChildSelectionChange($event)">
     </app-category-list>
   </div>
 </div>
 
 <div *ngIf="!isDropdownMode || parentId !== null" class="category-tree">
   <div *ngFor="let cat of rootCategories" class="category-node">
-
     <div class="category-item-row d-flex align-items-center my-1 p-1 rounded">
       <span class="expand-icon-wrapper" (click)="toggleExpand(cat.id)">
-        <i *ngIf="hasChildren(cat)" class="bi" [ngClass]="isExpanded(cat.id) ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
+        <i *ngIf="hasChildren(cat)" class="bi"
+          [ngClass]="isExpanded(cat.id) ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
         <i *ngIf="!hasChildren(cat)" class="bi bi-dot text-muted opacity-50"></i>
       </span>
 
-      <input
-        type="checkbox"
-        [checked]="isSelected(cat.id)"
-        (change)="toggleSelection(cat.id, $event)"
-        class="form-check-input mx-2">
+      <input [type]="singleSelection ? 'radio' : 'checkbox'" [name]="singleSelection ? 'singleCategoryGroup' : null"
+        [checked]="isSelected(cat.id)" (change)="toggleSelection(cat.id, $event)" class="form-check-input mx-2">
 
-      <label class="category-label flex-grow-1" (click)="toggleExpand(cat.id)">{{ cat.name }}</label>
+      <label class="category-label flex-grow-1" (click)="toggleSelection(cat.id, $event)">
+        {{ cat.name }}
+      </label>
     </div>
 
-    <div *ngIf="hasChildren(cat) && isExpanded(cat.id)" class="category-children">
-       <app-category-list
-         [allCategories]="allCategories"
-         [parentId]="cat.id ?? null"
-         [selectedIds]="selectedIds"
-         [isDropdownMode]="false"
-         (selectionChange)="selectionChange.emit($event)">
-       </app-category-list>
+    <div *ngIf="hasChildren(cat) && isExpanded(cat.id)" class="category-children ms-4">
+      <app-category-list [allCategories]="allCategories" [parentId]="cat.id ?? null" [selectedIds]="selectedIds"
+        [isDropdownMode]="false" [singleSelection]="singleSelection" (selectionChange)="onChildSelectionChange($event)">
+      </app-category-list>
     </div>
   </div>
 </div>

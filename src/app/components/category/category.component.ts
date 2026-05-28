@@ -21,11 +21,13 @@ import { CategoryListComponent } from '../gui/category-list/category-list.compon
   styleUrls: ['./category.component.css']
 })
 export class CategoryComponent implements OnInit {
+
   url = environment.apiUrl+'/categories';
   categories: Category[] = [];
   isEditing = false;
   categoryForm : Category = { name: '', parentId: null };
   selectedCategoryIds = new Set<number>();
+  parentCategoryIds= new Set<number>();
 
   constructor(private categoryService: CategoryService) {}
 
@@ -79,6 +81,15 @@ saveCategory() {
   }
 }
 
+/**
+ * Annule l'édition en cours et remet le formulaire à zéro
+ */
+cancelEdition() {
+  this.resetForm();                  // Remet le formulaire à blanc (name: '', parentId: null)
+  this.selectedCategoryIds.clear();  // Décoche la sélection dans l'arbre pour éviter les confusions
+}
+
+
   editCategory(cat: Category) {
     this.isEditing = true;
 
@@ -94,6 +105,10 @@ saveCategory() {
       name: cat.name,
       parentId: extractedParentId
     };
+    this.parentCategoryIds.clear();
+    if (this.categoryForm.parentId){
+      this.parentCategoryIds.add(this.categoryForm.parentId)
+    }
   }
 
   deleteCategory(id: number) {
@@ -109,7 +124,9 @@ saveCategory() {
   }
 
   private resetForm() {
-    this.categoryForm = { name: '', parentId: null };
+    this.categoryForm = { id: undefined, name: '', parentId: null }; // Ajoutez id: undefined ou null
+    this.selectedCategoryIds = new Set<number>();
+    this.parentCategoryIds = new Set<number>();
     this.isEditing = false;
   }
 
@@ -138,6 +155,12 @@ onCategorySelectionChange(ids: number[]) {
   this.selectedCategoryIds = new Set(ids);
   this.categoryForm.parentId= ids.length >0 ? ids[ids.length - 1] : null;
 
+}
+
+onParentCategorySelect($event: number[]) {
+  // 1. Mise à jour de la référence locale pour l'interface (Set)
+  this.selectedCategoryIds = new Set($event);
+  this.categoryForm.parentId= $event.length >0 ? $event[$event.length - 1] : null;
 }
 
 }

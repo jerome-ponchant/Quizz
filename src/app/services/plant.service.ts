@@ -57,10 +57,22 @@ export class PlantService {
       })
     );
   }
-  findAll(page: number = 1): Observable<{ plants: Plant[], total: number }> {
+  findAll(page: number = 1, search: string = '', categoryIds: number[] = []): Observable<{ plants: Plant[], total: number }> {
     const headers = new HttpHeaders({ 'Accept': 'application/ld+json' });
 
-    return this.http.get<HydraCollection<Plant>>(`${this.plantUrl}?page=${page}`, { headers }).pipe(
+    let url = `${this.plantUrl}?page=${page}`;
+
+  if (search.trim()) {
+    // API Platform combinera ces filtres avec un "OR" ou vous pouvez simplement
+    // envoyer la valeur aux deux propriétés.
+    url += `&search=${encodeURIComponent(search.trim())}`;
+  }
+  if (categoryIds && categoryIds.length > 0) {
+    // Jointure des IDs sous forme "1,2,3" pour le filtre personnalisé PHP (HAVING COUNT)
+    url += `&filterCategories=${categoryIds.join(',')}`;
+  }
+
+    return this.http.get<HydraCollection<Plant>>(url, { headers }).pipe(
       map(data => {
         return {
           // On gère les deux variantes de clés ici, une fois pour toutes
