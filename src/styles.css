@@ -1,2 +1,34 @@
 /* You can add global styles to this file, and also import other style files */
 @import '../node_modules/bootstrap/dist/css/bootstrap.css' ;
+
+/* Le conteneur qui prend tout l'écran en arrière-plan */
+.overlay-container {
+  position: fixed;      /* Reste fixé par rapport à l'écran, même si on scrolle */
+  top: 0;
+  left: 0;
+  width: 100vw;         /* 100% de la largeur de l'écran */
+  height: 100vh;        /* 100% de la hauteur de l'écran */
+  background-color: rgba(0, 0, 0, 0.5); /* Fond semi-transparent (optionnel) */
+
+  /* Activation de Flexbox pour centrer l'enfant */
+  display: flex;
+  justify-content: center; /* Centrage horizontal */
+  align-items: center;     /* Centrage vertical */
+
+  /* Gestion du premier plan */
+  z-index: 9999;        /* S'assure que le bloc passe au-dessus de tout le reste */
+}
+
+/* Le bloc de contenu */
+.centered-box {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
+  /* Ajustement automatique au contenu */
+  width: max-content;   /* Demande au bloc de prendre la largeur de son contenu */
+  max-width: 90%;       /* Sécurité pour éviter qu'il ne déborde sur mobile */
+  max-height: 90%;      /* Sécurité pour éviter qu'il ne dépasse en hauteur */
+  overflow: auto;       /* Ajoute des barres de défilement si le contenu est trop grand */
+}

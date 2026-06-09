@@ -30,9 +30,15 @@ export class PlantService {
       prefix: this.uploadUrl$
     }).pipe(
       map(({ plant, prefix }) => {
-        if (plant.imageUrl && !plant.imageUrl.startsWith('http')) {
-          // Utilisation du préfixe dynamique (ex: http://localhost:8000/uploads/plants/)
-          plant.imageUrl = `${prefix}${plant.imageUrl}`;
+        // On vérifie si la plante possède un tableau d'images opérationnel
+        if (plant.images && plant.images.length > 0) {
+          // On parcourt chaque image pour mettre à jour son URL
+          plant.images = plant.images.map(img => {
+            if (img.url && !img.url.startsWith('http')) {
+              img.url = `${prefix}${img.url}`;
+            }
+            return img;
+          });
         }
         return plant;
       })
@@ -74,7 +80,9 @@ export class PlantService {
 
     return this.http.get<HydraCollection<Plant>>(url, { headers }).pipe(
       map(data => {
+        console.log("Retour de PlantService.findAll()",data);
         return {
+
           // On gère les deux variantes de clés ici, une fois pour toutes
           plants: data['member'] || data['hydra:member'] || [],
           total: data['totalItems'] || data['hydra:totalItems'] || 0
@@ -88,8 +96,8 @@ export class PlantService {
   }
 
   update(id: number, plant: any): Observable<any> {
-    return this.http.patch(`${this.plantUrl}/${id}`, plant, {
-      headers: { 'Content-Type': 'application/merge-patch+json' }
+    return this.http.put(`${this.plantUrl}/${id}`, plant, {
+      headers: { 'Content-Type': 'application/ld+json' }
     });
   }
 

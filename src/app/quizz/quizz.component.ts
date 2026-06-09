@@ -7,6 +7,7 @@ import { environment } from '../../environments/environment';
 import { CategoryListComponent } from '../components/gui/category-list/category-list.component';
 import { CategoryService } from '../services/category.service';
 import { Category } from '../models/category';
+import { PlantImageManagerComponent } from '../components/gui/plant-image-manager/plant-image-manager.component';
 
 enum AnswerType {
   QCM = 'QCM',
@@ -16,7 +17,7 @@ enum AnswerType {
 @Component({
   selector: 'app-quizz',
   standalone: true,
-  imports: [FormsModule, CommonModule, CategoryListComponent],
+  imports: [FormsModule, CommonModule, CategoryListComponent, PlantImageManagerComponent],
   templateUrl: './quizz.component.html',
   styleUrl: './quizz.component.css',
 })

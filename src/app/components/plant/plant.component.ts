@@ -6,11 +6,12 @@ import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category';
 import { CategoryListComponent } from '../gui/category-list/category-list.component';
 import { environment } from '../../../environments/environment';
+import { PlantImageManagerComponent } from '../gui/plant-image-manager/plant-image-manager.component';
 
 @Component({
   selector: 'app-plant',
   standalone: true,
-  imports: [CommonModule, FormsModule,CategoryListComponent],
+  imports: [CommonModule, FormsModule,CategoryListComponent,PlantImageManagerComponent],
   templateUrl: './plant.component.html',
   styleUrls: ['./plant.component.css'],
 })
@@ -30,7 +31,7 @@ export class PlantComponent implements OnInit {
   selectedFilterCategoryIds: number[] = [];
   filterCategoryIdsSet = new Set<number>();
   // Formulaire avec gestion multi-catégories
-  plantForm: any = { id: null, name: '', commonName:'', imageUrl: '', categories: [] };
+  plantForm: any = { id: null, name: '', commonName:'', images: [], categories: [] };
 
   selectedCategoryIds = new Set<number>();
 
@@ -54,9 +55,11 @@ export class PlantComponent implements OnInit {
 
   // plant.component.ts
   loadData(page: number = 1) {
+    console.log('--- loadData appelé avec la page :', page);
     this.currentPage = page;
     this.plantService.findAll(page,this.searchTerm, this.selectedFilterCategoryIds).subscribe({
       next: (result) => {
+        console.log('--- Données reçues du service :', result);
         // Le service renvoie déjà un objet propre
         this.plants = result.plants;
         this.totalItems = result.total;
@@ -84,6 +87,10 @@ loadCategories() {
   });
 }
 
+onPlantImagesChanged(updatedImages: any[]) {
+  this.plantForm.images = updatedImages;
+}
+
   savePlant() {
     // Transformation des IDs de catégories en IRIs pour API Platform
     const payload = {
@@ -91,6 +98,8 @@ loadCategories() {
       categories: this.plantForm.categories.map(
         (id: number) => `/api/categories/${id}`
       ),
+// On remplace le tableau d'objets d'images par un tableau de chaînes (IRI) attendu par API Platform
+      images: this.plantForm.images.map((img: any) => img['@id'] || `/api/images/${img.id}`)
     };
 
     if (this.isEditing) {
@@ -112,7 +121,12 @@ loadCategories() {
     const categoryIds = plant.categories.map((c: any) =>
       typeof c === 'string' ? +c.split('/').pop()! : c.id
     );
-    this.plantForm = { ...plant, commonName: plant.commonName || '',categories: categoryIds };
+    this.plantForm = {
+      ...plant,
+      commonName: plant.commonName || '',
+      categories: categoryIds,
+      images: plant.images ? [...plant.images] : []
+    };
     this.floriscopeUrl =environment.floriscopeUrl + plant.name.replaceAll(' ', '+')
     this.wikipediaUrl = environment.wikipediaUrl+ plant.name.replaceAll(' + ', '+').replaceAll(' ', '+');
     this.selectedCategoryIds = new Set<number>(categoryIds);
@@ -151,13 +165,13 @@ onCategorySelectionChange(ids: number[]) {
   this.plantForm.categories = Array.from(this.selectedCategoryIds);
 }
 
-  private completeAction() {
-    this.cacheBuster = '?t=' + new Date().getTime(); // Génère un jeton unique (ex: ?t=171664123456)
-    this.loadData(); // Recharge toujours l'inventaire mis à jour depuis l'API
-    this.isEditing = false;
-    this.plantForm = { id: null, name: '', commonName:'',imageUrl: '', categories: [] };
-    this.selectedCategoryIds.clear(); // Pensez aussi à vider le Set des catégories sélectionnées
-  }
+private completeAction() {
+  this.cacheBuster = '?t=' + new Date().getTime();
+  this.loadData();
+  this.isEditing = false;
+  this.plantForm = { id: null, name: '', commonName: '', images: [], categories: [] };
+  this.selectedCategoryIds.clear();
+}
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
@@ -234,9 +248,9 @@ private extractIdFromParent(parent: any): number | null {
  */
 cancelEdition() {
   this.isEditing = false;
-  this.plantForm = { id: null, name: '', commonName: '',imageUrl: '', categories: [] };
+  this.plantForm = { id: null, name: '', commonName: '', images: [], categories: [] };
   this.selectedCategoryIds.clear();
-  this.selectedFile = null; // Optionnel : nettoie le fichier en mémoire si nécessaire
+  this.selectedFile = null;
 }
 
 onFilterCategoryChange(ids: number[]) {

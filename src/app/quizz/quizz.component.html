@@ -5,108 +5,109 @@
       <h1 class="text-center mb-4 text-success">
         <i class="bi bi-tree"></i> Herbier Numérique
       </h1>
+    </div>
 
-      <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body p-3">
-          <label class="fw-bold text-success mb-2">
-            <i class="bi bi-filter-square"></i> Filtrer les plantes par catégories :
-          </label>
-          <app-category-list
-            [allCategories]="categories"
-            [selectedIds]="selectedCategoryIds"
-            [isDropdownMode]="true"
-            (selectionChange)="onCategoryFilterChange($event)">
-          </app-category-list>
+    <!-- Filtre par catégorie-->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body p-3">
+        <label class="fw-bold text-success mb-2">
+          <i class="bi bi-filter-square"></i> Filtrer les plantes par catégories :
+        </label>
+        <app-category-list [allCategories]="categories" [selectedIds]="selectedCategoryIds" [isDropdownMode]="true"
+          (selectionChange)="onCategoryFilterChange($event)">
+        </app-category-list>
+      </div>
+    </div>
+
+    <!-- Affichage images-->
+    <div class="card">
+      <div class="card-body">
+        <!-- Is loading-->
+        <div *ngIf="isLoading" class="text-center my-5">
+          <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Recherche d'une plante...</span>
+          </div>
+          <p class="mt-2 text-muted italic">Exploration de la base botanique...</p>
+        </div>
+
+        <!-- Affichage central-->
+        <div *ngIf="!isLoading && currentPlant" class="card shadow-lg border-0">
+          <!-- En-tête-->
+          <div class="card-header mb-4 text-center">
+            <div class="row">
+              <div class="col-4">
+                <div class="card bg-light border-0">
+                  <small class="text-muted">Total</small>
+                  <div class="h4 text-success">{{ totalCorrect }}</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="card bg-light border-0" [class.animate__pulse]="currentStreak > 0">
+                  <small class="text-muted">Série</small>
+                  <div class="h4 text-primary">{{ currentStreak }} 🔥</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="card bg-warning border-0 text-white shadow-sm">
+                  <small>Best</small>
+                  <div class="h4">{{ bestStreak }} 🏆</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Affichage Image-->
+          <div *ngIf="currentPlant" class="card-body shadow-lg">
+            <!-- La plante -->
+            <div class="ratio-16x9 position-relative">
+              <!-- Cas Demande de réponse -->
+              <app-plant-image-manager *ngIf="feedback?.status === null"
+                [prefix]="(uploadPrefix$ | async) ?? ''" [displayMode]="'carousel'" [readOnly]="true"  [plant]="currentPlant">
+              </app-plant-image-manager>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="card-footer">
+        <div *ngIf="failedPlants.size > 0" class="text-center mt-2">
+          <span class="badge rounded-pill bg-info text-dark">
+            {{ failedPlants.size }} plante(s) en cours d'apprentissage
+          </span>
         </div>
       </div>
 
-      <div *ngIf="isLoading" class="text-center my-5">
-        <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
-          <span class="visually-hidden">Recherche d'une plante...</span>
+    </div>
+
+    <!-- Formulaire réponse-->
+    <div class="card">
+      <!-- Mode de réponse-->
+      <div class="card-header">
+        <div class="d-flex justify-content-around align-items-center mb-3">
+          <p class="text-muted mb-0 fw-bolder">Identifiez cette espèce si vous pouvez ! 😁</p>
+          <span class="badge bg-primary">Score: {{ score }} pts</span>
         </div>
-        <p class="mt-2 text-muted italic">Exploration de la base botanique...</p>
-      </div>
+        <!-- Mode de réponse -->
+        <div class="d-flex align-items-center justify-content-center gap-3 mb-3">
+          <span class="fw-bold mb-0 flex-shrink-0">Choisissez votre mode de réponse :</span>
 
-      <div *ngIf="!isLoading && currentPlant" class="card shadow-lg border-0">
-
-        <div class="container py-4">
-          <div class="row mb-4 text-center">
-            <div class="col-4">
-              <div class="card bg-light border-0">
-                <small class="text-muted">Total</small>
-                <div class="h4 text-success">{{ totalCorrect }}</div>
-              </div>
-            </div>
-            <div class="col-4">
-              <div class="card bg-light border-0" [class.animate__pulse]="currentStreak > 0">
-                <small class="text-muted">Série</small>
-                <div class="h4 text-primary">{{ currentStreak }} 🔥</div>
-              </div>
-            </div>
-            <div class="col-4">
-              <div class="card bg-warning border-0 text-white shadow-sm">
-                <small>Best</small>
-                <div class="h4">{{ bestStreak }} 🏆</div>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="currentPlant" class="card shadow-lg" [class.success-anim]="feedback?.status === 'success'"
-            [class.error-anim]="feedback?.status === 'error'" [class.record-anim]="feedback?.status === 'record'">
-
-            <div class="ratio ratio-16x9 position-relative">
-              <img [src]="(uploadPrefix$ |async)+currentPlant.imageUrl" class="card-img-top img-cover">
-              <img *ngIf="feedback?.status==='record'" src="assets/images/record/1.gif" class="card-img-top img-cover" style="z-index: 10;">
-              <img *ngIf="feedback?.status==='success'" src="assets/images/success/1.gif" class="card-img-top img-cover" style="z-index: 10;">
-              <div *ngIf="isNewRecord" class="position-absolute top-50 start-50 translate-middle">
-                <h2 class="display-1 text-warning animate__animated animate__zoomIn">🏆</h2>
-              </div>
-            </div>
-
-            <div class="card-body">
-              <div *ngIf="failedPlants.size > 0" class="text-center mt-2">
-                <span class="badge rounded-pill bg-info text-dark">
-                  {{ failedPlants.size }} plante(s) en cours d'apprentissage
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <p class="text-muted mb-0 fw-bolder">Identifiez cette espèce si vous pouvez ! 😁</p>
-            <span class="badge bg-primary">Score: {{ score }} pts</span>
-          </div>
-
-          <div class="answer-selector">
-            <h3>Choisissez votre mode de réponse :</h3>
-            <div class="radio-group">
-            <label class="radio-item">
-              <input type="radio"
-                     name="mode"
-                     [checked]="selectedType === answerTypes.TEXT"
-                     [value]="answerTypes.TEXT"
-                     [disabled]="selectedType === answerTypes.QCM"
-                     (change)="selectType(answerTypes.TEXT)">
+          <div class="d-flex gap-3">
+            <label class="radio-item d-flex align-items-center gap-1 cursor-pointer">
+              <input type="radio" name="mode" [checked]="selectedType === answerTypes.TEXT" [value]="answerTypes.TEXT"
+                (change)="selectType(answerTypes.TEXT)">
               Saisie libre (10 pts)
             </label>
 
-            <label class="radio-item">
-              <input type="radio"
-                     name="mode"
-                     [checked]="selectedType === answerTypes.QCM"
-                     [value]="answerTypes.QCM"
-                     [disabled]="selectedType === answerTypes.QCM"
-                     (change)="selectType(answerTypes.QCM)">
+            <label class="radio-item d-flex align-items-center gap-1 cursor-pointer">
+              <input type="radio" name="mode" [checked]="selectedType === answerTypes.QCM" [value]="answerTypes.QCM"
+                (change)="selectType(answerTypes.QCM)">
               QCM (1 pt)
             </label>
-            </div>
           </div>
-
-          <hr>
-
-          <div [ngSwitch]="selectedType">
+        </div>
+      </div>
+      <!-- Le formulaire de réponse-->
+      <div class="card-body">
+        <div [ngSwitch]="selectedType">
           <div class="input-group input-group-lg mb-3" *ngSwitchCase="answerTypes.TEXT">
             <input type="text" [(ngModel)]="userAnswer" (keyup.enter)="checkAnswer()"
               [disabled]="feedback?.status ==='success' " class="form-control" placeholder="Nom de la plante..."
@@ -120,72 +121,68 @@
           <div *ngSwitchCase="answerTypes.QCM">
             <div class="row g-2 mb-4" *ngIf="!feedback && quizzOptions.length > 0">
               <div class="col-6" *ngFor="let option of quizzOptions">
-                <button
-                  class="btn btn-outline-success w-100 py-2 shadow-sm fw-bold transition-all"
-                  (click)="checkAnswer(option)"
-                  [disabled]="isLoading">
+                <button class="btn btn-outline-success w-100 py-2 shadow-sm fw-bold transition-all"
+                  (click)="checkAnswer(option)" [disabled]="isLoading">
                   {{ option.name }}
                 </button>
               </div>
             </div>
-            <p class="warning"><em>Mode QCM activé : choix définitif pour cette plante.</em></p>
+            <p class="warning"><em>Mode QCM activé : Un succès ne sortira pas la plante de celles à réviser ...</em></p>
           </div>
-
-          <div class="text-center mt-2">
-            <button class="btn btn-sm btn-outline-danger border-0" (click)="giveUp()" *ngIf="!feedback">
-              <i class="fw-bold bi bi-question-circle "> Je suis vraiment trop nul... </i>😞
-            </button>
-          </div>
-
         </div>
-          <!--div *ngIf="feedback" [ngClass]="feedback.status ==='success'  ? 'alert-success' : 'alert-danger'"
-            class="alert d-flex align-items-center animate__animated animate__fadeIn" role="alert">
-            <i class="bi me-2"
-              [ngClass]="feedback.status ==='success'  ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
-            <div class="flex-grow-1">
-              {{ feedback.message }}
-            </div>
-            <div class="ms-auto" style="flex-shrink: 0;">
-              <a [href]="floriscopeUrl"><img src="assets/images/floriscope.svg"/></a>
-            </div>
-          </div -->
-
-          <div *ngIf="feedback"
-     [ngClass]="feedback.status === 'success' ? 'alert-success' : 'alert-danger'"
-     class="alert animate__animated animate__fadeIn"
-     role="alert">
-
-  <div class="row align-items-center">
-    <div class="col-auto">
-      <i class="bi"
-         [ngClass]="feedback.status === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"
-         style="font-size: 1.2rem;"></i>
-    </div>
-
-    <div class="col">
-      {{ feedback.message }}
-    </div>
-
-    <div class="col-auto">
-      <a [href]="floriscopeUrl" target="_blank">
-        <img src="assets/images/floriscope.svg"
-             alt="Floriscope"
-             style="height: 30px; width: auto; display: block;">
-      </a>
-    </div>
-  </div>
-</div>
-
-          <div class="d-flex justify-content-between mt-3">
-            <span class="badge bg-light text-dark pt-2">ID: #{{ currentPlant.id }}</span>
-          </div>
-          <button class="btn btn-sm btn-link text-muted" (click)="resetStats()">
-            Réinitialiser mes stats
+      </div>
+      <!-- Abandon -->
+      <div class="card-footer">
+        <div class="text-center mt-2">
+          <button class="btn btn-sm btn-outline-danger border-0" (click)="giveUp()" *ngIf="!feedback">
+            <i class="fw-bold bi bi-question-circle "> Je suis vraiment trop nul... </i>😞
           </button>
-
         </div>
       </div>
 
+    </div>
+  </div>
+  <!-- Pied de page-->
+  <div *ngIf="currentPlant" class="d-flex justify-content-between mt-3">
+    <span class="badge bg-light text-dark pt-2">ID: #{{ currentPlant.id }}</span>
+
+    <button class="btn btn-sm btn-link text-muted" (click)="resetStats()">
+      Réinitialiser mes stats
+    </button>
+  </div>
+</div>
+
+
+<!-- Cas Feedback-->
+<div *ngIf="feedback?.status" class="overlay-container">
+  <div class="centered-box" [class.success-anim]="feedback?.status === 'success'"
+    [class.error-anim]="feedback?.status === 'error'" [class.record-anim]="feedback?.status === 'record'">
+    <!-- Cas record -->
+    <img *ngIf="feedback?.status==='record'" src="assets/images/record/1.gif" class="card-img-top img-cover"
+      style="z-index: 10; pointer-events: none;">
+    <!-- Cas succès -->
+    <img *ngIf="feedback?.status==='success'" src="assets/images/success/1.gif" class="card-img-top img-cover"
+      style="z-index: 10; pointer-events: none;">
+    <!-- Cas Nouveau record -->
+    <div *ngIf="isNewRecord" class="position-absolute top-50 start-50 translate-middle" style="z-index: 11;">
+      <h2 class="display-1 text-warning animate__animated animate__zoomIn">🏆</h2>
+    </div>
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <i class="bi"
+          [ngClass]="feedback?.status === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"
+          style="font-size: 1.2rem;"></i>
+      </div>
+
+      <div class="col">
+        {{ feedback?.message }}
+      </div>
+
+      <div class="col-auto">
+        <a [href]="floriscopeUrl" target="_blank">
+          <img src="assets/images/floriscope.svg" alt="Floriscope" style="height: 30px; width: auto; display: block;">
+        </a>
+      </div>
     </div>
   </div>
 </div>

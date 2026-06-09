@@ -1,0 +1,53 @@
+<div class="image-manager-container">
+
+  @if (displayMode === 'carousel') {
+    <div class="carousel-wrapper">
+      @if (images.length > 0) {
+        <div class="carousel-slide">
+          <img [src]="images[currentCarouselIndex].url.startsWith('http') ? images[currentCarouselIndex].url : prefix + images[currentCarouselIndex].url"
+          alt="Illustration de la plante">
+          <div class="carousel-counter">{{ currentCarouselIndex + 1 }} / {{ images.length }}</div>
+        </div>
+        @if (images.length > 1) {
+          <button class="nav-btn prev" (click)="prevSlide()">&#10094;</button>
+          <button class="nav-btn next" (click)="nextSlide()">&#10095;</button>
+        }
+      } @else {
+        <div class="no-image">Aucune image disponible</div>
+      }
+    </div>
+  }
+
+  @if (displayMode === 'mosaic') {
+    <div class="mosaic-grid" cdkDropList (cdkDropListDropped)="onDrop($event)">
+
+      @for (img of images; track img.url; let idx = $index) {
+        <div class="mosaic-item" cdkDrag [cdkDragDisabled]="readOnly">
+          @if (!readOnly) {
+            <div class="drag-handle" cdkDragHandle>☰</div>
+          }
+
+          <img [src]="img.url.startsWith('http') ? img.url : prefix + img.url"
+               alt="Illustration de la plante">
+          <span class="position-badge">{{ img.position + 1 }}</span>
+
+          @if (!readOnly) {
+            <button class="delete-btn" (click)="removeImage(idx, $event)" title="Supprimer">✕</button>
+          }
+
+          <div class="drag-placeholder" *cdkDragPlaceholder></div>
+        </div>
+      }
+
+      @if (!readOnly) {
+        <div class="mosaic-item upload-box" (click)="fileInput.click()">
+          <div class="upload-content">
+            <i class="bi bi-plus-circle fs-2 text-success"></i>
+            <span>Ajouter</span>
+          </div>
+          <input #fileInput type="file" accept="image/*" class="d-none" (change)="onFileSelected($event)">
+        </div>
+      }
+    </div>
+  }
+</div>

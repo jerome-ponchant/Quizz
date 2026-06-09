@@ -1,0 +1,8 @@
+{
+  "name": "Jack Lacter's Botanic Quizz",
+  "short_name": "Plantes",
+  "icons": [],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

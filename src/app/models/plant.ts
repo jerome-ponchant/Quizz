@@ -1,6 +1,8 @@
+import { PlantImage } from "./plant-image";
+
 export interface Plant {
   id: number;
   name: string;
-  imageUrl: string;
+  images: PlantImage[];
   commonName:string;
 }
