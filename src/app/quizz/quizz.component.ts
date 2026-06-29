@@ -71,9 +71,9 @@ export class QuizzComponent implements OnInit {
   }
 
   // Déclenché dès qu'on coche/décoche des catégories dans le dropdown
-  onCategoryFilterChange(ids: number[]) {
-    this.selectedCategoryIds = new Set(ids);
+  onCategoryFilterChange(ids: Set<number>) {
     // On relance immédiatement une nouvelle question adaptée aux nouveaux filtres !
+    this.selectedCategoryIds = ids;
     this.loadNextPlant();
   }
 

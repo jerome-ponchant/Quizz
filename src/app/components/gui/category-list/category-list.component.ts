@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, model, output } from '@angular/core';
 import { Category } from '../../../models/category';
 import { CommonModule } from '@angular/common';
 
@@ -13,11 +13,13 @@ export class CategoryListComponent {
   @Input() allCategories: Category[] = [];
   @Input() parentId: number | null = null;
 // On stocke les IDs sélectionnés dans un Set pour éviter de modifier le modèle
-  @Input() selectedIds = new Set<number>();
+
+// Crée automatiquement l'input 'selectedIds' ET l'output 'selectedIdsChange'
+  selectedIds = model<Set<number>>(new Set());
   @Input() isDropdownMode: boolean = false; // Mode d'affichage demandé
   @Input() singleSelection: boolean = false;
 
-  @Output() selectionChange = new EventEmitter<number[]>();
+  selectionChange = output<Set<number>>();
 
 // Set local pour mémoriser les IDs des catégories dépliées
   expandedIds = new Set<number>();
@@ -33,13 +35,18 @@ export class CategoryListComponent {
   }
 
   get selectedLabels(): string {
-    const selectedNames = this.allCategories
-      .filter(c => c.id !== undefined && this.selectedIds.has(c.id))
+    const currentIds = this.selectedIds();
+
+    // SÉCURITÉ : Si ce n'est pas un Set (ou s'il est vide), on retourne une chaîne vide
+    if (!currentIds || !(currentIds instanceof Set) || currentIds.size === 0) {
+      return 'Choisir les catégories...';
+    }
+
+    const labels = this.allCategories
+      .filter(c => c.id !== undefined && currentIds.has(c.id)) // Plus de crash ici !
       .map(c => c.name);
 
-    if (selectedNames.length === 0) return 'Choisir les catégories...';
-    if (selectedNames.length > 2) return `${selectedNames.length} catégories sélectionnées`;
-    return selectedNames.join(', ');
+    return labels.length > 0 ? labels.join(', ') : 'Choisir les catégories...';
   }
 
   toggleDropdown() {
@@ -47,40 +54,64 @@ export class CategoryListComponent {
   }
 
   isSelected(id?: number): boolean {
-    return id !== undefined && this.selectedIds.has(id);
+    return id !== undefined && this.selectedIds().has(id);
   }
 
-  toggleSelection(id: number | undefined, event: any) {
-    if (id === undefined) return;
+  toggleSelection(catId: number, event: Event): void {
+    // Évite les doubles déclenchements si le clic provient du label
+    event.stopPropagation();
 
-    // 1. On vérifie si l'élément était DÉJÀ sélectionné avant le clic
-    const wasAlreadySelected = this.selectedIds.has(id);
+    // On travaille sur une copie pour conserver l'immutabilité
+    let nextSelection = new Set<number>(this.selectedIds());
 
     if (this.singleSelection) {
-      // En mode sélection unique :
-      if (wasAlreadySelected) {
-        // Si on clique sur l'élément déjà coché, on vide tout (désélection)
-        this.selectedIds.clear();
-        // On force l'élément HTML (radio) à se décocher visuellement
-        event.target.checked = false;
-      } else {
-        // Sinon, on vide l'ancienne sélection et on ajoute la nouvelle
-        this.selectedIds.clear();
-        this.selectedIds.add(id);
-      }
+      nextSelection.clear();
+      nextSelection.add(catId);
+      // Optionnel : Sélectionner les parents aussi en mode unique si désiré
+      this.selectParents(catId, nextSelection);
     } else {
-      // Mode multi-sélection (comportement d'origine inchangé)
-      const isChecked = event.target.checked;
-      if (isChecked) {
-        this.selectedIds.add(id);
+      // Mode Checkbox (Multi-sélection)
+      if (nextSelection.has(catId)) {
+        nextSelection.delete(catId);
+        // Note : On ne décoche pas forcément les parents car d'autres enfants peuvent en dépendre
       } else {
-        this.selectedIds.delete(id);
+        nextSelection.add(catId);
+        // REMISE EN APPLI : On remonte la chaîne pour cocher tous les parents
+        this.selectParents(catId, nextSelection);
       }
     }
 
-    // On émet le tableau (vide si désélectionné, ou avec le nouvel ID)
-    this.selectionChange.emit(Array.from(this.selectedIds));
+    this.selectedIds.set(new Set(nextSelection));
+
+    // On émet le tableau mis à jour au composant parent
+    this.selectionChange.emit(this.selectedIds());
   }
+
+  /**
+   * Fonction utilitaire privée pour remonter l'arbre généalogique des catégories
+   */
+/**
+ * Fonction utilitaire privée pour remonter l'arbre généalogique des catégories
+ */
+private selectParents(catId: number, selectedSet: Set<number>): void {
+  let currentCat = this.allCategories.find(c => c.id === catId);
+
+  // Tant qu'on trouve la catégorie, on extrait son parent avec le helper
+  while (currentCat) {
+    const parentId = this.getParentId(currentCat);
+
+    // Si la catégorie n'a plus de parent, on s'arrête
+    if (parentId === null) {
+      break;
+    }
+
+    // On ajoute le parent à la sélection
+    selectedSet.add(parentId);
+
+    // On passe au parent supérieur pour continuer à remonter
+    currentCat = this.allCategories.find(c => c.id === parentId);
+  }
+}
 
   // Vérifie si la sous-arborescence doit être visible
   isExpanded(id: number | undefined): boolean {
@@ -120,12 +151,12 @@ hasChildren(cat: Category): boolean {
 }
 
 // Pour que les composants enfants notifient aussi le parent racine
-onChildSelectionChange(ids: number[]) {
+onChildSelectionChange(ids: Set<number>) {
   // CORRECTION : On reconstruit le Set avec les nouvelles valeurs reçues de l'enfant
   // pour forcer la détection de changement Angular sur l'instance courante
-  this.selectedIds = new Set<number>(ids);
+  this.selectedIds.set(new Set<number>(ids));
 
   // On remonte l'info au composant parent supérieur
-  this.selectionChange.emit(ids);
+  this.selectionChange.emit(this.selectedIds());
 }
 }

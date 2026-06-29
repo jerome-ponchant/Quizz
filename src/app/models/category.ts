@@ -30,4 +30,6 @@ export interface Category {
    * Liste des plantes appartenant à cette catégorie (optionnel).
    */
   plants?: string[];
+
+  impliedCategoryIds?: number[];
 }

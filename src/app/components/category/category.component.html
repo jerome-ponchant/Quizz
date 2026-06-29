@@ -1,7 +1,6 @@
 <div class="container py-5">
   <div class="row justify-content-center">
     <div class="col-md-10">
-
       <h1 class="text-center mb-4 text-success">
         <i class="bi bi-tags"></i> Gestion des Catégories
       </h1>
@@ -9,54 +8,107 @@
       <!-- Formulaire d'ajout/édition -->
       <div class="card shadow-lg border-0 mb-5">
         <div class="card-body p-4">
-          <h5 class="fw-bold mb-3">{{ isEditing ? 'Modifier la catégorie' : 'Nouvelle Catégorie' }}</h5>
+          <h5 class="fw-bold mb-3">
+            {{ isEditing ? "Modifier la catégorie" : "Nouvelle Catégorie" }}
+          </h5>
+
           <div class="row g-3">
-            <div class="col-md-5">
-              <input type="text" [(ngModel)]="categoryForm.name" class="form-control form-control-lg"
-                placeholder="Nom de la catégorie...">
-            </div>
-            <div class="col-md-5">
-              <label>Catégorie parente</label>
-              <app-category-list [allCategories]="categories" [selectedIds]="parentCategoryIds"  [isDropdownMode]="true" [singleSelection]="true"
-              (selectionChange)="onParentCategorySelect($event)">
-            </app-category-list>
+            <!-- Nom de la catégorie -->
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Nom de la catégorie</label>
+              <input
+                type="text"
+                [(ngModel)]="categoryForm.name"
+                class="form-control form-control-lg"
+                placeholder="Nom de la catégorie..."
+              />
             </div>
 
+            <!-- Catégorie parente (Sélection unique) -->
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Catégorie parente</label>
+              <app-category-list
+                [allCategories]="categories"
+                [(selectedIds)]="parentCategoryIds"
+                [isDropdownMode]="true"
+                [singleSelection]="true"
+                (selectionChange)="onCategorySelectionChange($event)"
+              >
+              </app-category-list>
+            </div>
 
-            <div class="col-md-3 d-flex gap-2">
-              <button *ngIf="isEditing" class="btn btn-outline-secondary btn-lg" (click)="cancelEdition()"
-                title="Créer une nouvelle catégorie">
+            <!-- NOUVEAU : Catégories impliquées (Sélection multiple en Arborescence fixe) -->
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Catégories impliquées</label>
+              <div
+                class="border rounded p-2 bg-white"
+                style="max-height: 200px; overflow-y: auto"
+              >
+                <app-category-list
+                  [allCategories]="filterCurrentCategory(categories)"
+                  [(selectedIds)]="impliedCategoryIds"
+                  [isDropdownMode]="false"
+                  [singleSelection]="false"
+                >
+                </app-category-list>
+              </div>
+              <small class="text-muted"
+                >Sélectionnez les catégories liées ou incluses.</small
+              >
+            </div>
+
+            <!-- Boutons d'actions -->
+            <div class="col-12 d-flex gap-2 justify-content-end mt-3">
+              <button
+                *ngIf="isEditing"
+                class="btn btn-outline-secondary btn-lg"
+                (click)="cancelEdition()"
+                title="Créer une nouvelle catégorie"
+              >
                 <i class="bi bi-plus-circle"></i> Nouvelle
               </button>
 
-              <button class="btn btn-success btn-lg flex-grow-1 fw-bold" (click)="saveCategory()">
-                {{ isEditing ? 'Modifier' : 'Ajouter' }}
+              <button
+                class="btn btn-success btn-lg fw-boldpx-5"
+                (click)="saveCategory()"
+              >
+                {{ isEditing ? "Modifier" : "Ajouter" }}
               </button>
 
-              <button *ngIf="isEditing && categoryForm.id" class="btn btn-danger btn-lg"
-                (click)="deleteCategory(categoryForm.id)">
-                <i class="bi bi-trash">Supprimer</i>
+              <button
+                *ngIf="isEditing && categoryForm.id"
+                class="btn btn-danger btn-lg"
+                (click)="deleteCategory(categoryForm.id)"
+              >
+                <i class="bi bi-trash"></i> Supprimer
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Liste des catégories -->
+      <!-- Liste des catégories administrative -->
       <div class="card shadow-sm border-0 mt-4">
         <div class="card-header bg-white py-3">
-          <h5 class="fw-bold mb-0 text-success"><i class="bi bi-diagram-3"></i> Structure hiérarchique des catégories
+          <h5 class="fw-bold mb-0 text-success">
+            <i class="bi bi-diagram-3"></i> Structure hiérarchique des
+            catégories
           </h5>
         </div>
-        <div class="card-body bg-light" style="max-height: 500px; overflow-y: auto;">
-
-          <app-category-list [allCategories]="categories" [selectedIds]="selectedCategoryIds" [singleSelection]="true"
-            (selectionChange)="onAdminCategorySelect($event)" [isDropdownMode]="false">
+        <div
+          class="card-body bg-light"
+          style="max-height: 500px; overflow-y: auto"
+        >
+          <app-category-list
+            [allCategories]="categories"
+            [(selectedIds)]="selectedCategoryIds"
+            [singleSelection]="true"
+            [isDropdownMode]="false"
+            (selectedIdsChange)="onAdminCategorySelect($event)"
+          >
           </app-category-list>
-
         </div>
       </div>
-
     </div>
   </div>
 </div>

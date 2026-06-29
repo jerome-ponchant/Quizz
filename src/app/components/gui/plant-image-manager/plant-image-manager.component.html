@@ -4,8 +4,9 @@
     <div class="carousel-wrapper">
       @if (images.length > 0) {
         <div class="carousel-slide">
-          <img [src]="images[currentCarouselIndex].url.startsWith('http') ? images[currentCarouselIndex].url : prefix + images[currentCarouselIndex].url"
-          alt="Illustration de la plante">
+          <img [src]="(images[currentCarouselIndex].url.startsWith('http') || images[currentCarouselIndex].url.startsWith('blob:')) ? images[currentCarouselIndex].url : prefix + images[currentCarouselIndex].url"
+          alt="Illustration de la plante"
+          (click)="openLightbox(images[currentCarouselIndex].url)">
           <div class="carousel-counter">{{ currentCarouselIndex + 1 }} / {{ images.length }}</div>
         </div>
         @if (images.length > 1) {
@@ -27,8 +28,10 @@
             <div class="drag-handle" cdkDragHandle>☰</div>
           }
 
-          <img [src]="img.url.startsWith('http') ? img.url : prefix + img.url"
-               alt="Illustration de la plante">
+          <img [src]="(img.url.startsWith('http') || img.url.startsWith('blob:')) ? img.url : prefix + img.url"
+          alt="Illustration de la plante"
+          (click)="openLightbox(img.url)"
+          class="clickable-img">
           <span class="position-badge">{{ img.position + 1 }}</span>
 
           @if (!readOnly) {
@@ -47,7 +50,23 @@
           </div>
           <input #fileInput type="file" accept="image/*" class="d-none" (change)="onFileSelected($event)">
         </div>
+        <div class="mosaic-item upload-box" (click)="cameraInput.click()">
+          <div class="upload-content">
+            <i class="bi bi-camera fs-2 text-primary"></i>
+            <span>Caméra</span>
+          </div>
+          <input #cameraInput type="file" accept="image/*" capture="environment" class="d-none" (change)="onFileSelected($event)">
+        </div>
       }
     </div>
   }
 </div>
+
+@if (lightboxImage) {
+  <div class="lightbox-overlay" (click)="closeLightbox()">
+    <button class="lightbox-close" (click)="closeLightbox(); $event.stopPropagation()">✕</button>
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <img [src]="lightboxImage.startsWith('http') ? lightboxImage : prefix + lightboxImage" alt="Image en grand format">
+    </div>
+  </div>
+}
