@@ -1,0 +1,70 @@
+<div class="container-fluid py-5 bg-light" style="min-height: 100vh;">
+  <div class="container">
+    <h2 class="mb-4 text-primary"><i class="bi bi-shield-check"></i> Banc d'essai : Isolation PlantDetail</h2>
+
+    <div class="row g-4">
+
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-3">
+          <div class="card-header bg-dark text-white fw-bold">
+            <i class="bi bi-sliders"></i> Console de Pilotage (Backend Fictif)
+          </div>
+          <div class="card-body">
+
+            <div class="d-grid gap-2 mb-4">
+              <button class="btn btn-success fw-bold" (click)="prepareNewPlant()">
+                <i class="bi bi-plus-circle"></i> Simuler : Mode Création (Input = null)
+              </button>
+              <button class="btn btn-danger fw-bold" (click)="deleteCurrentPlant()" [disabled]="!selectedPlant?.id">
+                <i class="bi bi-trash"></i> Simuler : Supprimer la plante active
+              </button>
+            </div>
+
+            <label class="fw-bold text-secondary small uppercase">Plantes en Base de Données</label>
+            <div class="list-group shadow-sm mb-4">
+              <button
+                *ngFor="let p of mockPlants"
+                type="button"
+                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                [class.active]="selectedPlant?.id === p.id"
+                (click)="selectPlant(p)">
+                <div>
+                  <strong class="d-block">{{ p.name }}</strong>
+                  <small [class.text-white]="selectedPlant?.id === p.id" class="text-muted">{{ p.commonName || 'Pas de nom vernaculaire' }}</small>
+                </div>
+                <span class="badge rounded-pill bg-secondary">ID: {{ p.id }}</span>
+              </button>
+              <div *ngIf="mockPlants.length === 0" class="list-group-item text-center text-muted italic">
+                Aucune plante en BDD fictive.
+              </div>
+            </div>
+
+            <label class="fw-bold text-secondary small uppercase">État de l'Input `[plant]` actuel :</label>
+            <pre class="bg-white p-2 border rounded text-danger small" style="max-height: 200px; overflow-y: auto;">{{ selectedPlant | json }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="bg-white p-2 rounded shadow-sm border border-primary border-3 position-relative">
+          <span class="position-absolute top-0 start-50 translate-middle badge bg-primary px-3 py-2 fw-bold text-uppercase">
+            Composant PlantDetail Isolé
+          </span>
+
+          <div class="pt-3">
+            <app-plant-detail
+              #plantDetail
+              [plant]="selectedPlant"
+              [allCategories]="categories"
+              [uploadPrefix]="uploadPrefix"
+              (save)="handleSave($event)"
+              (applyImplications)="handleImplications($event, plantDetail)">
+            </app-plant-detail>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

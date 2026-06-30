@@ -1,0 +1,101 @@
+<div class="card h-100 shadow-sm border-2 btn-outline-success success-anim">
+
+  <div class="card-header bg-light border-0 pt-3">
+    <h5 class="fw-bold text-success mb-0">
+      <i class="bi" [ngClass]="plant ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
+      {{ plant ? 'Modifier la plante' : 'Nouvelle fiche plante' }}
+    </h5>
+  </div>
+
+  <div class="card-body">
+    <div class="row g-3 m-2" >
+
+      <div class="col-md-6">
+        <label class="fw-bold small text-secondary">Nom international <span class="text-danger">*</span></label>
+        <input type="text" [(ngModel)]="localPlant.name" class="form-control" placeholder="ex: Schefflera arboricola">
+      </div>
+
+      <div class="col-md-6">
+        <label class="fw-bold small text-secondary">Nom courant / vernaculaire</label>
+        <input type="text" [(ngModel)]="localPlant.commonName" class="form-control"
+          placeholder="ex: Arbre-parapluie nain">
+      </div>
+    </div>
+    <div class="row g-3 m-2" >
+      <div class="col-md-12">
+        <label class="fw-bold small text-secondary">Description / Analyse de morphologie</label>
+        <textarea [(ngModel)]="localPlant.description" class="form-control" rows="4" placeholder="Saisissez la description de la plante, ses critères d'identification, entretien..."></textarea>
+      </div>
+    </div>
+    <div *ngIf="isValid"  class="row g-3">
+      <div class="col-md-6">
+        <a [href]="floriscopeUrl" target="_blank">
+          <img src="assets/images/floriscope.svg" alt="Floriscope" style="height: 30px; width: auto; display: block;">
+        </a>
+      </div>
+      <div class="col-md-6">
+        <a [href]="wikipediaUrl" target="_blank">
+          <img src="assets/images/wikipedia.svg" alt="wikipedia" style="height: 30px; width: auto; display: block;">
+        </a>
+      </div>
+
+    </div>
+    <div class="row g-3">
+      <div class="col-md-12">
+        <label class="fw-bold small text-secondary mb-1">Catégories de la plante</label>
+        <div class="border rounded p-3 bg-light" style="max-height: 200px; overflow-y: auto;">
+          <app-category-list [allCategories]="allCategories" [(selectedIds)]="selectedCategoryIds"
+            [isDropdownMode]="false">
+          </app-category-list>
+        </div>
+        <div class="mt-2">
+          <button type="button" class="btn btn-sm btn-outline-success shadow-sm" (click)="onApplyInvolvedCategories()"
+            [disabled]="selectedCategoryIds().size === 0">
+            <i class="bi bi-diagram-3-fill"></i> Appliquer les implications de catégories
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-12 mt-3">
+        <label class="fw-bold small text-secondary mb-2">Galerie d'images</label>
+
+        <div *ngIf="!isValid" class="alert alert-warning py-1 small mb-2">
+          <i class="bi bi-exclamation-triangle-fill"></i> Renseignez le nom international pour gérer les images.
+        </div>
+
+        <div class="mt-2">
+          <app-plant-image-manager
+            [plant]="localPlant"
+            [prefix]="uploadPrefix"
+            [readOnly]="false"
+            [displayMode]="'mosaic'"
+            [isVirtual]="!localPlant.id">
+          </app-plant-image-manager>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="card-footer bg-white border-top-0 d-flex justify-content-end gap-2 p-3">
+    <button
+      *ngIf="localPlant?.id"
+      type="button"
+      class="btn btn-outline-danger"
+      (click)="onDelete()">
+      <i class="bi bi-trash"></i> Supprimer la plante
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-success px-4"
+      [disabled]="!isValid"
+      (click)="onSave()">
+      <i class="bi bi-check-circle-fill"></i>
+      {{ localPlant?.id ? 'Enregistrer les modifications' : 'Créer la plante' }}
+    </button>
+  </div>
+
+</div>

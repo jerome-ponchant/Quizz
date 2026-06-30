@@ -2,80 +2,16 @@
   <h1 class="text-success mb-4"><i class="bi bi-tree-fill"></i> Inventaire des Plantes</h1>
 
   <!-- Formulaire -->
-  <div #formTop class="card shadow border-0 mb-5">
-    <div class="card-body p-4">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="fw-bold">Nom international</label>
-          <input type="text" [(ngModel)]="plantForm.name" class="form-control"><br><br><br>
-          <a [href]="floriscopeUrl" target="_blank">
-            <img src="assets/images/floriscope.svg" alt="Floriscope" style="height: 30px; width: auto; display: block;">
-          </a>
-        </div>
-        <div class="col-md-3">
-          <label class="fw-bold">Nom vernaculaire</label>
-          <input type="text" [(ngModel)]="plantForm.commonName" class="form-control"
-            placeholder="ex: Rosier de France"><br><br><br>
-          <a [href]="wikipediaUrl" target="_blank">
-            <img src="assets/images/wikipedia.svg" alt="wikipedia" style="height: 30px; width: auto; display: block;">
-          </a>
-        </div>
-        <div class="row">
-          <div class="col-md-12">
-            <label class="fw-bold text-success mb-2">
-              <i class="bi bi-images"></i> Galerie d'images de l'espèce (Mosaïque interactive)
-            </label>
-
-            @if (!plantForm.name || plantForm.name.trim() === '') {
-            <div class="alert alert-warning py-2 small">
-              <i class="bi bi-exclamation-triangle-fill"></i> Saisissez d'abord le <strong>Nom international</strong>
-              pour pouvoir manipuler les images.
-            </div>
-            }
-
-            <div [style.pointer-events]="(!plantForm.name || plantForm.name.trim() === '') ? 'none' : 'auto'"
-              [style.opacity]="(!plantForm.name || plantForm.name.trim() === '') ? '0.5' : '1'">
-              <app-plant-image-manager [displayMode]="'mosaic'" [prefix]="(uploadPrefix$ | async) ?? ''"
-                [plant]="plantForm" [readOnly]="false">
-              </app-plant-image-manager>
-            </div>
-          </div>
-        </div>
+  <app-plant-detail
+  #plantDetail
+  [plant]="isEditing ? plantForm : null"
+  [allCategories]="categories"
+  [uploadPrefix]="(uploadPrefix$ | async) ?? ''"
+  (actionCompleted)="onPlantActionCompleted()"
+  (applyImplications)="handleImplicationsFromDetail($event, plantDetail)">
+</app-plant-detail>
 
 
-        <div class="row">
-          <div>
-            <div class="col-md-8">
-              <label class="fw-bold mb-2">Catégories de la plante</label>
-              <div class="border rounded p-3 bg-light">
-                <app-category-list [allCategories]="categories" [(selectedIds)]="selectedCategoryIds"
-                  [isDropdownMode]="true">
-                </app-category-list>
-              </div>
-              <div class="mt-2 mb-3">
-                <button type="button" class="btn btn-sm btn-outline-success shadow-sm"
-                  (click)="applyInvolvedCategoriesToForm()" [disabled]="selectedCategoryIds().size === 0">
-                  <i class="bi bi-diagram-3-fill"></i> Appliquer les implications de catégories
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-4 text-end d-flex justify-content-end gap-2">
-            <button [class]="isEditing ? 'btn btn-primary btn-lg fw-bold' : 'btn btn-success btn-lg fw-bold'"
-              (click)="savePlant()">
-              <i [class]="isEditing ? 'bi bi-check-circle-fill' : 'bi bi-plus-circle-fill'"></i>
-              {{ isEditing ? "Mettre à jour l'espèce" : "Ajouter à l'herbier" }}
-            </button>
-            <button *ngIf="isEditing" class="btn btn-outline-secondary btn-lg fw-bold" (click)="cancelEdition()"
-              title="Créer une nouvelle fiche de plante">
-              <i class="bi bi-arrow-counterclockwise"></i> Nouvelle plante
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
   <div class="border-2 border-primary rounded row mb-4">
     <div class="col-md-5 col-lg-4">
       <div class="input-group shadow-sm">

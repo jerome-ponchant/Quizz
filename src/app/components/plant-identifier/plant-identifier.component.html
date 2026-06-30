@@ -49,9 +49,8 @@
       </div>
     </div>
   </div>
-
   @if (analysisResult()) {
-    <div class="card shadow border-0 border-start border-success border-4 fade-in">
+    <div class="card shadow border-0 border-start border-success border-4 fade-in mb-4">
       <div class="card-body p-4">
         <h4 class="text-success fw-bold mb-4">
           <i class="bi bi-check-circle-fill"></i> Résultat de l'analyse
@@ -94,5 +93,55 @@
         </div>
       </div>
     </div>
+
+    <div class="card shadow border-0 p-4 mb-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+          @if (matchingPlant()) {
+            <p class="text-muted mb-0">
+              <i class="bi bi-info-circle-fill text-primary"></i>
+              Cette plante existe déjà dans votre base de données (ID: {{ matchingPlant()?.id }}).
+            </p>
+          } @else {
+            <p class="text-muted mb-0">
+              <i class="bi bi-question-circle-fill text-warning"></i>
+              Aucune correspondance exacte trouvée dans votre collection actuelle.
+            </p>
+          }
+        </div>
+
+        <div>
+          @if (matchingPlant()) {
+            <button
+              class="btn btn-primary d-flex align-items-center gap-2"
+              [disabled]="showDetailForm()"
+              (click)="updatePlantFromAnalysis()">
+              <i class="bi bi-pencil-square"></i> Mettre à jour la fiche existante
+            </button>
+          } @else {
+            <button
+              class="btn btn-outline-success d-flex align-items-center gap-2"
+              [disabled]="showDetailForm()"
+              (click)="createPlantFromAnalysis()">
+              <i class="bi bi-plus-circle-fill"></i> Créer une nouvelle fiche plante
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (showDetailForm() && plantToEdit()) {
+      <div class="mt-4 fade-in">
+        <app-plant-detail
+          [plant]="plantToEdit()"
+          [uploadPrefix]="(uploadPrefix$ | async) ?? ''"
+          [allCategories]="allCategories"
+          (actionCompleted)="onDetailActionCompleted()">
+        </app-plant-detail>
+      </div>
+    }
   }
+
 </div>
+
+

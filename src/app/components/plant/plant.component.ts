@@ -14,6 +14,7 @@ import { Category } from '../../models/category';
 import { CategoryListComponent } from '../gui/category-list/category-list.component';
 import { environment } from '../../../environments/environment';
 import { PlantImageManagerComponent } from '../gui/plant-image-manager/plant-image-manager.component';
+import { PlantDetailComponent } from './plant-detail/plant-detail.component';
 
 @Component({
   selector: 'app-plant',
@@ -23,6 +24,7 @@ import { PlantImageManagerComponent } from '../gui/plant-image-manager/plant-ima
     FormsModule,
     CategoryListComponent,
     PlantImageManagerComponent,
+    PlantDetailComponent
   ],
   templateUrl: './plant.component.html',
   styleUrls: ['./plant.component.css'],
@@ -37,8 +39,7 @@ export class PlantComponent implements OnInit {
   // Sous tes autres propriétés de classe
   cacheBuster: string = '';
   uploadPrefix$ = this.plantService.getPrefix();
-  floriscopeUrl?: string = '';
-  wikipediaUrl?: string = '';
+
   searchTerm: string = '';
   selectedFilterCategoryIds: Set<number> = new Set<number>();
   filterCategoryIdsSet = new Set<number>();
@@ -255,4 +256,38 @@ export class PlantComponent implements OnInit {
     // 2. On met à jour le signal pour rafraîchir l'arbre des catégories visuellement
     this.selectedCategoryIds.set(resultSet);
   }
+
+// Réception du formulaire enfant validé
+savePlantFromDetail(localFormPayload: any) {
+  // Transformation finale des IDs numériques plats pour API Platform
+  const payload = {
+    ...localFormPayload,
+    categories: localFormPayload.categories.map((id: number) => `/api/categories/${id}`),
+    images: localFormPayload.images.map((img: any) => img['@id'] || `/api/images/${img.id}`),
+  };
+
+  if (this.isEditing) {
+    this.plantService.update(localFormPayload.id, payload).subscribe(() => this.completeAction());
+  } else {
+    delete payload.id;
+    this.plantService.create(payload).subscribe((newPlant) => {
+      this.plants.unshift(newPlant);
+      this.completeAction();
+    });
+  }
+}
+
+// Calcul de la fermeture transitive des catégories
+handleImplicationsFromDetail(currentIdsSet: Set<number>, detailComponent: any) {
+  const resultSet = this.categoryService.findImpliedCategories(currentIdsSet, this.categories);
+  // On réinjecte le Set calculé directement dans le signal du sous-composant
+  detailComponent.selectedCategoryIds.set(resultSet);
+}
+
+onPlantActionCompleted() {
+  this.isEditing = false;
+  this.plantForm = { id: null, name: '', commonName: '', images: [], categories: [] };
+  this.loadData(this.currentPage); // Recharge l'inventaire mis à jour
+}
+
 }

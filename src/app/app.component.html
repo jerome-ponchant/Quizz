@@ -1,12 +1,54 @@
-<nav class="navbar navbar-dark bg-success mb-4">
+<nav class="navbar navbar-expand-lg navbar-dark bg-success mb-4 shadow-sm">
   <div class="container">
-    <span class="navbar-brand">Jack Lacter is proud to present ...</span>
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" routerLink="/">
+      <i class="bi bi-tree-fill"></i> Jack Lacter is proud to present ...
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="#navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center gap-2"
+             routerLink="/quizz"
+             routerLinkActive="active fw-bold">
+            <i class="bi bi-controller"></i> Quizz
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center gap-2"
+             routerLink="/identification"
+             routerLinkActive="active fw-bold">
+            <i class="bi bi-cpu-fill"></i> Identification IA
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center gap-2"
+             routerLink="/plant"
+             routerLinkActive="active fw-bold">
+            <i class="bi bi-journal-medical"></i> Collection Plantes
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center gap-2"
+             routerLink="/category"
+             routerLinkActive="active fw-bold">
+            <i class="bi bi-tags-fill"></i> Catégories
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
 </nav>
 
-<router-outlet></router-outlet>
-<nav class="navbar navbar-dark bg-success mb-4">
-  <div class="container">
-    <div class="navbar-brand">© 2026 Jérôme Ponchant - Tous droits réservés.</div>
+<div class="main-content-wrapper">
+  <router-outlet></router-outlet>
+</div>
+
+<footer class="navbar navbar-dark bg-dark mt-5 py-3">
+  <div class="container text-center text-muted small">
+    <div>© 2026 Jérôme Ponchant - Tous droits réservés.</div>
   </div>
-</nav>
+</footer>

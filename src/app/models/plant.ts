@@ -5,4 +5,5 @@ export interface Plant {
   name: string;
   images: PlantImage[];
   commonName:string;
+  description:string;
 }
